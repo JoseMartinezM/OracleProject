@@ -1,0 +1,8 @@
+localdb_high = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.mx-queretaro-1.oraclecloud.com))(connect_data=(service_name=g383278b51e2c05_localdb_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
+
+localdb_low = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.mx-queretaro-1.oraclecloud.com))(connect_data=(service_name=g383278b51e2c05_localdb_low.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
+
+localdb_medium = (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.mx-queretaro-1.oraclecloud.com))(connect_data=(service_name=g383278b51e2c05_localdb_medium.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
+
+
+
