@@ -1,24 +1,32 @@
-<<<<<<< HEAD
-# oci-react-samples
-A repository for full stack Cloud Native applications with a React JS frontend and various backends (Java, Python, DotNet, and so on) on the Oracle Cloud Infrastructure.
+# DATOS IMPORTANTES PARA CORRER EL PROYECTO - LEER PRIMERO
 
-![image](https://user-images.githubusercontent.com/7783295/116454396-cbfb7a00-a814-11eb-8196-ba2113858e8b.png)
-  
+## PASOS PARA EJECUTAR
+1. Navegar a la carpeta del backend: `cd ruta/a/MtdrSpring/backend`
+2. Ejecutar estos comandos en orden:
+   ```
+   mvn clean install
+   mvn spring-boot:run
+   ```
 
-## MyToDo React JS
-The `mtdrworkshop` repository hosts the materiald (code, scripts and instructions) for building and deploying Cloud Native Application using a Java/Helidon backend
+## CREDENCIALES Y DATOS DE CONFIGURACIÓN
 
+### Oracle Cloud
+- OCID Compartment: `ocid1.compartment.oc1..aaaaaaaatv5o4fgmxcdcn3t7d7ukizkxoht6awq5qtboddkzeee56nnqnswq`
+- MTDR_DB_OCID: `ocid1.autonomousdatabase.oc1.mx-queretaro-1.anyxeljrafjygrqar3nghwauftvpd2w7yvmtltnpzpftv6bp6ozqmn2e3m5q`
+- Database PASSWORD: `oracleTeam14`
 
-### Requirements
-The lab executes scripts that require the following software to run properly: (These are already installed on and included with the OCI Cloud Shell)
-* oci-cli
-* python 2.7^
-* terraform
-* kubectl
-* mvn (maven) 
+### Credenciales UI
+- User ID: `equipo14Oracle`
+- Password: `toomanyPSWDS`
 
-## Expect more ...
-=======
-# OracleProject
-Project for Oracle
->>>>>>> aab40e5f928c7f4d0969d983efe5595fc3184fd4
+### Telegram Bot
+- Bot Username: `team14oracle_bot`
+- API Token: `7594571838:AAHWJa8AmrmJafNUF2VSWXaMLY-pLP-d-S0`
+
+### Local Database
+- LocalDataBase = `LocalDataBase1`
+- Wallet Local = `LocalWallet1`
+- ToDoUserTable = `Oracle123456!`
+
+---
+
