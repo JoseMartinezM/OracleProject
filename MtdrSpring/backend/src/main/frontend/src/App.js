@@ -1,51 +1,34 @@
-          /*
-## MyToDoReact version 1.0.
-##
-## Copyright (c) 2022 Oracle, Inc.
-## Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/
-*/
 /*
- * This is the application main React component. We're using "function"
- * components in this application. No "class" components should be used for
- * consistency.
- * @author  jean.de.lavarene@oracle.com
- */
+** Oracle Todo Application - Main App Component with GitHub Integration
+**
+** Copyright (c) 2025, Oracle and/or its affiliates.
+** Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/
+*/
+
 import React, { useState, useEffect } from 'react';
 import NewItem from './NewItem';
+import GitHubIntegration from './GitHubIntegration';
 import API_LIST from './API';
-import DeleteIcon from '@mui/icons-material/Delete';
 import { Button, TableBody, CircularProgress } from '@mui/material';
 import Moment from 'react-moment';
+import './github-integration.css';
 
-/* In this application we're using Function Components with the State Hooks
- * to manage the states. See the doc: https://reactjs.org/docs/hooks-state.html
- * This App component represents the entire app. It renders a NewItem component
- * and two tables: one that lists the todo items that are to be done and another
- * one with the items that are already done.
- */
 function App() {
-    // isLoading is true while waiting for the backend to return the list
-    // of items. We use this state to display a spinning circle:
+    // Estado para controlar la pestaña activa
+    const [activeTab, setActiveTab] = useState('tasks'); // 'tasks' o 'github'
+    
+    // Estados originales de la aplicación
     const [isLoading, setLoading] = useState(false);
-    // Similar to isLoading, isInserting is true while waiting for the backend
-    // to insert a new item:
     const [isInserting, setInserting] = useState(false);
-    // The list of todo items is stored in this state. It includes the "done"
-    // "not-done" items:
     const [items, setItems] = useState([]);
-    // In case of an error during the API call:
     const [error, setError] = useState();
 
     function deleteItem(deleteId) {
-      // console.log("deleteItem("+deleteId+")")
       fetch(API_LIST+"/"+deleteId, {
         method: 'DELETE',
       })
       .then(response => {
-        // console.log("response=");
-        // console.log(response);
         if (response.ok) {
-          // console.log("deleteItem FETCH call is ok");
           return response;
         } else {
           throw new Error('Something went wrong ...');
@@ -61,6 +44,7 @@ function App() {
         }
       );
     }
+    
     function toggleDone(event, id, description, done) {
       event.preventDefault();
       modifyItem(id, description, done).then(
@@ -68,6 +52,7 @@ function App() {
         (error) => { setError(error); }
       );
     }
+    
     function reloadOneIteam(id){
       fetch(API_LIST+"/"+id)
         .then(response => {
@@ -91,8 +76,8 @@ function App() {
             setError(error);
           });
     }
+    
     function modifyItem(id, description, done) {
-      // console.log("deleteItem("+deleteId+")")
       var data = {"description": description, "done": done};
       return fetch(API_LIST+"/"+id, {
         method: 'PUT',
@@ -102,25 +87,16 @@ function App() {
         body: JSON.stringify(data)
       })
       .then(response => {
-        // console.log("response=");
-        // console.log(response);
         if (response.ok) {
-          // console.log("deleteItem FETCH call is ok");
           return response;
         } else {
           throw new Error('Something went wrong ...');
         }
       });
     }
-    /*
-    To simulate slow network, call sleep before making API calls.
-    const sleep = (milliseconds) => {
-      return new Promise(resolve => setTimeout(resolve, milliseconds))
-    }
-    */
+    
     useEffect(() => {
       setLoading(true);
-      // sleep(5000).then(() => {
       fetch(API_LIST)
         .then(response => {
           if (response.ok) {
@@ -138,33 +114,21 @@ function App() {
             setLoading(false);
             setError(error);
           });
-
-      //})
     },
-    // https://en.reactjs.org/docs/faq-ajax.html
-    [] // empty deps array [] means
-       // this useEffect will run once
-       // similar to componentDidMount()
+    [] // empty deps array [] means this useEffect will run once
     );
+    
     function addItem(text){
-      console.log("addItem("+text+")")
       setInserting(true);
       var data = {};
-      console.log(data);
       data.description = text;
       fetch(API_LIST, {
         method: 'POST',
-        // We convert the React state to JSON and send it as the POST body
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(data),
       }).then((response) => {
-        // This API doens't return a JSON document
-        console.log(response);
-        console.log();
-        console.log(response.headers.location);
-        // return response.json();
         if (response.ok) {
           return response;
         } else {
@@ -183,58 +147,122 @@ function App() {
         }
       );
     }
+    
+    // Get counts of pending and completed items
+    const pendingItems = items.filter(item => !item.done);
+    const completedItems = items.filter(item => item.done);
+    
     return (
       <div className="App">
-        <h1>MY TODO LIST</h1>
-        <NewItem addItem={addItem} isInserting={isInserting}/>
-        { error &&
-          <p>Error: {error.message}</p>
-        }
-        { isLoading &&
-          <CircularProgress />
-        }
-        { !isLoading &&
-        <div id="maincontent">
-        <table id="itemlistNotDone" className="itemlist">
-          <TableBody>
-          {items.map(item => (
-            !item.done && (
-            <tr key={item.id}>
-              <td className="description">{item.description}</td>
-              { /*<td>{JSON.stringify(item, null, 2) }</td>*/ }
-              <td className="date"><Moment format="MMM Do hh:mm:ss">{item.createdAt}</Moment></td>
-              <td><Button variant="contained" className="DoneButton" onClick={(event) => toggleDone(event, item.id, item.description, !item.done)} size="small">
-                    Done
-                  </Button></td>
-            </tr>
-          )))}
-          </TableBody>
-        </table>
-        <h2 id="donelist">
-          Done items
-        </h2>
-        <table id="itemlistDone" className="itemlist">
-          <TableBody>
-          {items.map(item => (
-            item.done && (
-
-            <tr key={item.id}>
-              <td className="description">{item.description}</td>
-              <td className="date"><Moment format="MMM Do hh:mm:ss">{item.createdAt}</Moment></td>
-              <td><Button variant="contained" className="DoneButton" onClick={(event) => toggleDone(event, item.id, item.description, !item.done)} size="small">
-                    Undo
-                  </Button></td>
-              <td><Button startIcon={<DeleteIcon />} variant="contained" className="DeleteButton" onClick={() => deleteItem(item.id)} size="small">
-                    Delete
-                  </Button></td>
-            </tr>
-          )))}
-          </TableBody>
-        </table>
+        {/* Oracle Logo */}
+        <img 
+          src="https://imgs.search.brave.com/VP0I6z3w18_vEzuRoDlY0arRjFf9OdUsX3928ysRXmE/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9sb2dv/ZG93bmxvYWQub3Jn/L3dwLWNvbnRlbnQv/dXBsb2Fkcy8yMDE0/LzA0L29yYWNsZS1s/b2dvLTAucG5n" 
+          alt="Oracle Logo" 
+          className="oracle-logo" 
+        />
+        
+        <h1>ORACLE TODO LIST</h1>
+        
+        {/* Pestañas de navegación */}
+        <div className="app-tabs">
+          <div 
+            className={`app-tab ${activeTab === 'tasks' ? 'active' : ''}`}
+            onClick={() => setActiveTab('tasks')}
+          >
+            Tasks
+          </div>
+          <div 
+            className={`app-tab ${activeTab === 'github' ? 'active' : ''}`}
+            onClick={() => setActiveTab('github')}
+          >
+            GitHub Integration
+          </div>
         </div>
-        }
-
+        
+        {/* Contenido de la pestaña de tareas */}
+        {activeTab === 'tasks' && (
+          <>
+            <NewItem addItem={addItem} isInserting={isInserting}/>
+            
+            { error &&
+              <div className="error-message">
+                <p>Error: {error.message}</p>
+              </div>
+            }
+            
+            { isLoading ? (
+              <div className="loading-container">
+                <div className="loading-spinner"></div>
+              </div>
+            ) : (
+              <div id="maincontent">
+                {/* Pending Tasks */}
+                <div className="task-section-header">
+                  <h2>Tasks To Do <span className="task-count">{pendingItems.length}</span></h2>
+                </div>
+                
+                <table id="itemlistNotDone" className="itemlist">
+                  <TableBody>
+                  {pendingItems.length === 0 ? (
+                    <tr>
+                      <td colSpan="3" className="empty-message">
+                        No pending tasks. Add a task to get started!
+                      </td>
+                    </tr>
+                  ) : (
+                    pendingItems.map(item => (
+                      <tr key={item.id}>
+                        <td className="description">{item.description}</td>
+                        <td className="date"><Moment format="MMM Do HH:mm">{item.createdAt}</Moment></td>
+                        <td><Button variant="contained" className="DoneButton" onClick={(event) => toggleDone(event, item.id, item.description, !item.done)} size="small">
+                              Done
+                            </Button></td>
+                      </tr>
+                    ))
+                  )}
+                  </TableBody>
+                </table>
+                
+                {/* Completed Tasks */}
+                <h2 id="donelist">
+                  Done items <span className="task-count">{completedItems.length}</span>
+                </h2>
+                
+                <table id="itemlistDone" className="itemlist">
+                  <TableBody>
+                  {completedItems.length === 0 ? (
+                    <tr>
+                      <td colSpan="4" className="empty-message">
+                        No completed tasks yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    completedItems.map(item => (
+                      <tr key={item.id}>
+                        <td className="description">{item.description}</td>
+                        <td className="date"><Moment format="MMM Do HH:mm">{item.createdAt}</Moment></td>
+                        <td><Button variant="contained" className="DoneButton" onClick={(event) => toggleDone(event, item.id, item.description, !item.done)} size="small">
+                              Undo
+                            </Button></td>
+                        <td><Button variant="contained" className="DeleteButton" onClick={() => deleteItem(item.id)} size="small">
+                              Delete
+                            </Button></td>
+                      </tr>
+                    ))
+                  )}
+                  </TableBody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
+        
+        {/* Contenido de la pestaña de integración GitHub */}
+        {activeTab === 'github' && (
+          <GitHubIntegration todos={items} />
+        )}
       </div>
     );
 }
+
 export default App;

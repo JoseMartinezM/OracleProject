@@ -1,0 +1,132 @@
+/*
+** Oracle Todo Application - GitHub Integration Styles
+**
+** Copyright (c) 2025, Oracle and/or its affiliates.
+** Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/
+*/
+
+/* Estilos específicos para la integración de GitHub */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.8rem;
+    border-radius: 20px;
+    padding: 0.3rem 0.8rem;
+    min-width: 20px;
+  }
+  
+  .status-badge.merged {
+    background: rgba(93, 188, 134, 0.2);
+    color: #5dbc86;
+  }
+  
+  .ci-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    border-radius: 20px;
+    padding: 0.3rem 0.8rem;
+    min-width: 20px;
+    margin-right: 0.5rem;
+  }
+  
+  .ci-pending {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  .ci-running {
+    background: rgba(66, 139, 202, 0.2);
+    color: #6aafff;
+    animation: pulse 2s infinite;
+  }
+  
+  .ci-success {
+    background: rgba(93, 188, 134, 0.2);
+    color: #5dbc86;
+  }
+  
+  .ci-failed {
+    background: rgba(199, 70, 52, 0.2);
+    color: #ff8080;
+  }
+  
+  /* Fila resaltada para CI fallido */
+  tr.ci-failed {
+    border-left: 3px solid var(--oracle-red);
+  }
+  
+  /* Ajustes de botón y efectos para sección GitHub */
+  button.MuiButton-root.AddButton::before {
+    content: "+";
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-right: 0.5rem;
+    line-height: 0;
+  }
+  
+  /* Ajuste para diferentes tipos de botones */
+  .MuiDialogActions-root .MuiButton-root.DeleteButton,
+  .MuiDialogActions-root .MuiButton-root.DoneButton {
+    min-width: 100px;
+    margin: 0.5rem;
+  }
+  
+  /* Tabs de navegación para cambiar entre vistas */
+  .app-tabs {
+    display: flex;
+    width: 100%;
+    margin-bottom: 2rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+  
+  .app-tab {
+    flex: 1;
+    text-align: center;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: rgba(255, 255, 255, 0.7);
+    position: relative;
+  }
+  
+  .app-tab.active {
+    background: rgba(199, 70, 52, 0.2);
+    color: var(--oracle-text);
+  }
+  
+  .app-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: var(--oracle-red);
+  }
+  
+  .app-tab:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--oracle-text);
+  }
+  
+  /* Ajuste responsive para los tabs */
+  @media (max-width: 768px) {
+    .app-tabs {
+      flex-direction: column;
+    }
+    
+    .app-tab {
+      padding: 0.7rem;
+    }
+    
+    .app-tab.active::after {
+      height: 2px;
+    }
+  }
