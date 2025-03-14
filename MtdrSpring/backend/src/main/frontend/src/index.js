@@ -8,6 +8,7 @@
  * @author  jean.de.lavarene@oracle.com
  */
 
+//index.js
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
