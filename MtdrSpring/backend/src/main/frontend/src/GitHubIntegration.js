@@ -6,13 +6,13 @@
 */
 
 import React, { useState, useEffect } from 'react';
-import { Button, TableBody, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from '@mui/material';
+import { Button, TableBody, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Snackbar, Alert } from '@mui/material';
 import Moment from 'react-moment';
+import { GITHUB_CREATE_BRANCH, GITHUB_GET_BRANCHES } from './API';
 
 function GitHubIntegration({ todos }) {
   // Estados para gestionar los datos de GitHub
   const [branches, setBranches] = useState([]);
-  const [pullRequests, setPullRequests] = useState([]);
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   
@@ -21,108 +21,207 @@ function GitHubIntegration({ todos }) {
   const [selectedTask, setSelectedTask] = useState(null);
   const [branchName, setBranchName] = useState('');
   
-  // Datos de ejemplo para la demostración del frontend
+  // Estados para mensajes de retroalimentación
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
+  const [debugInfo, setDebugInfo] = useState('');
+  
+  // Parámetros GitHub para la API
+  const owner = 'antoineganem';
+  const repo = 'testing';
+  
+  // Cargar ramas del repositorio al montar el componente
   useEffect(() => {
-    // Simular carga de datos
-    setLoading(true);
-    
-    // Datos de ejemplo de ramas
-    const dummyBranches = [
-      { id: 1, name: 'task-123-add-login-page', taskId: 123, createdAt: new Date('2025-03-01T10:30:00'), status: 'active' },
-      { id: 2, name: 'task-456-fix-css-issues', taskId: 456, createdAt: new Date('2025-03-05T14:20:00'), status: 'merged' },
-      { id: 3, name: 'task-789-update-api', taskId: 789, createdAt: new Date('2025-03-08T09:15:00'), status: 'active' }
-    ];
-    
-    // Datos de ejemplo de pull requests
-    const dummyPRs = [
-      { id: 101, branchId: 1, title: 'Add login page', status: 'open', createdAt: new Date('2025-03-02T11:45:00'), ciStatus: 'running' },
-      { id: 102, branchId: 2, title: 'Fix CSS issues', status: 'merged', createdAt: new Date('2025-03-06T16:30:00'), ciStatus: 'success' },
-      { id: 103, branchId: 3, title: 'Update API integration', status: 'open', createdAt: new Date('2025-03-09T10:20:00'), ciStatus: 'failed' }
-    ];
-    
-    // Simular retraso de carga
-    setTimeout(() => {
-      setBranches(dummyBranches);
-      setPullRequests(dummyPRs);
-      setLoading(false);
-    }, 1000);
+    fetchBranches();
   }, []);
+  
+  // Función para obtener las ramas del repositorio
+  const fetchBranches = async () => {
+    setLoading(true);
+    setError(null);
+    setDebugInfo('Fetching branches...');
+    
+    try {
+      const url = `${GITHUB_GET_BRANCHES}?owner=${owner}&repo=${repo}`;
+      setDebugInfo(prev => `${prev}\nRequest URL: ${url}`);
+      
+      const response = await fetch(url);
+      
+      setDebugInfo(prev => `${prev}\nResponse status: ${response.status} ${response.statusText}`);
+      
+      if (!response.ok) {
+        throw new Error(`Error fetching branches: ${response.status} ${response.statusText}`);
+      }
+      
+      const responseText = await response.text();
+      setDebugInfo(prev => `${prev}\nResponse body: ${responseText.substring(0, 200)}...`);
+      
+      // Intentar parsear el JSON
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        setDebugInfo(prev => `${prev}\nError parsing JSON: ${parseError.message}`);
+        throw new Error('Invalid JSON response from server');
+      }
+      
+      setDebugInfo(prev => `${prev}\nBranches fetched: ${data.length || 0}`);
+      setBranches(data);
+    } catch (err) {
+      console.error('Error fetching branches:', err);
+      setError(err);
+      setDebugInfo(prev => `${prev}\nError: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
   
   // Funciones para manejar acciones
   const handleCreateBranch = (taskId) => {
     const task = todos.find(todo => todo.id === taskId);
+    if (!task) return;
+    
     setSelectedTask(task);
-    setBranchName(`task-${taskId}-${task?.description.toLowerCase().replace(/\s+/g, '-').slice(0, 20)}`);
+    // Crear un nombre de rama basado en la descripción de la tarea
+    const cleanDescription = task.description
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, '') // Eliminar caracteres especiales
+      .replace(/\s+/g, '-')     // Reemplazar espacios con guiones
+      .slice(0, 30);            // Limitar longitud
+      
+    setBranchName(`task-${taskId}-${cleanDescription}`);
     setOpenCreateBranchDialog(true);
   };
   
-  const confirmCreateBranch = () => {
-    // Simulación de creación de rama
-    const newBranch = {
-      id: branches.length + 1,
-      name: branchName,
-      taskId: selectedTask.id,
-      createdAt: new Date(),
-      status: 'active'
+  const confirmCreateBranch = async () => {
+    if (!branchName || !selectedTask) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    const requestData = {
+      owner: owner,
+      repo: repo,
+      branch: branchName,
+      baseBranch: "main", // Especificar la branch base
+      taskId: selectedTask.id
     };
     
-    setBranches([newBranch, ...branches]);
-    setOpenCreateBranchDialog(false);
+    // Debug info
+    setDebugInfo(`Creating branch: ${branchName}\nRequest data: ${JSON.stringify(requestData, null, 2)}`);
+    console.log('Sending request to create branch:', requestData);
+    console.log('Endpoint URL:', GITHUB_CREATE_BRANCH);
     
-    // Reiniciar estados
-    setSelectedTask(null);
-    setBranchName('');
-  };
-  
-  const handleCreatePR = (branchId) => {
-    // Simulación de creación de PR
-    const branch = branches.find(b => b.id === branchId);
-    const task = todos.find(todo => todo.id === branch.taskId);
-    
-    const newPR = {
-      id: pullRequests.length + 101,
-      branchId: branchId,
-      title: task?.description || `PR from branch ${branch.name}`,
-      status: 'open',
-      createdAt: new Date(),
-      ciStatus: 'pending'
-    };
-    
-    setPullRequests([newPR, ...pullRequests]);
-    
-    // Simular inicio de CI
-    setTimeout(() => {
-      setPullRequests(prs => prs.map(pr => 
-        pr.id === newPR.id ? { ...pr, ciStatus: 'running' } : pr
-      ));
+    try {
+      const response = await fetch(GITHUB_CREATE_BRANCH, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+      });
       
-      // Simular finalización de CI
-      setTimeout(() => {
-        const result = Math.random() > 0.3 ? 'success' : 'failed';
-        setPullRequests(prs => prs.map(pr => 
-          pr.id === newPR.id ? { ...pr, ciStatus: result } : pr
-        ));
-      }, 3000);
-    }, 1000);
+      // Capturar la respuesta completa para depuración
+      const responseText = await response.text();
+      
+      setDebugInfo(prev => `${prev}\nResponse status: ${response.status} ${response.statusText}`);
+      setDebugInfo(prev => `${prev}\nResponse body: ${responseText}`);
+      
+      console.log('Response from server:', response.status, response.statusText);
+      console.log('Response body:', responseText);
+      
+      // Intentar parsear la respuesta como JSON si es posible
+      let jsonResponse = null;
+      try {
+        if (responseText) {
+          jsonResponse = JSON.parse(responseText);
+          console.log('Parsed JSON response:', jsonResponse);
+          setDebugInfo(prev => `${prev}\nParsed response: ${JSON.stringify(jsonResponse, null, 2)}`);
+        }
+      } catch (parseError) {
+        console.log('Response is not JSON:', responseText);
+      }
+      
+      if (!response.ok) {
+        const errorMessage = jsonResponse?.message || responseText || response.statusText;
+        throw new Error(`Error creating branch: ${response.status} - ${errorMessage}`);
+      }
+      
+      // Notificar éxito
+      setNotification({
+        open: true,
+        message: `Branch ${branchName} created successfully!`,
+        severity: 'success'
+      });
+      
+      // Refrescar la lista de ramas
+      await fetchBranches();
+      
+      // Cerrar el diálogo
+      setOpenCreateBranchDialog(false);
+      setSelectedTask(null);
+      setBranchName('');
+      
+    } catch (err) {
+      console.error('Error creating branch:', err);
+      setDebugInfo(prev => `${prev}\nError: ${err.message}`);
+      
+      // Mostrar error
+      setError(err);
+      setNotification({
+        open: true,
+        message: `Failed to create branch: ${err.message}`,
+        severity: 'error'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
   
-  const handleMergePR = (prId) => {
-    // Actualizar el PR a merged
-    setPullRequests(prs => prs.map(pr => 
-      pr.id === prId ? { ...pr, status: 'merged' } : pr
-    ));
+  // Comprueba si una tarea ya tiene una rama asociada
+  const taskHasBranch = (taskId) => {
+    if (!branches || !branches.length) return false;
     
-    // Actualizar la rama asociada a merged
-    const pr = pullRequests.find(p => p.id === prId);
-    setBranches(branches => branches.map(branch => 
-      branch.id === pr.branchId ? { ...branch, status: 'merged' } : branch
-    ));
+    return branches.some(branch => {
+      // Verificar si el nombre de la rama contiene el ID de la tarea
+      return branch.name.includes(`task-${taskId}-`);
+    });
   };
+  
+  // Cerrar notificación
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, open: false });
+  };
+  
+  // Para mostrar/ocultar información de depuración
+  const [showDebug, setShowDebug] = useState(false);
   
   // Renderizado de los componentes
   return (
     <div>
       <h1>GITHUB INTEGRATION</h1>
+      
+      {/* Botón para mostrar/ocultar información de depuración */}
+      <div style={{ textAlign: 'right', marginBottom: '15px' }}>
+        <Button 
+          variant="outlined" 
+          size="small"
+          onClick={() => setShowDebug(!showDebug)}
+          style={{ 
+            backgroundColor: 'rgba(255, 255, 255, 0.07)',
+            color: 'rgba(255, 255, 255, 0.7)',
+            border: '1px solid rgba(255, 255, 255, 0.15)'
+          }}
+        >
+          {showDebug ? 'Hide Debug Info' : 'Show Debug Info'}
+        </Button>
+      </div>
+      
+      {showDebug && debugInfo && (
+        <div className="debug-info">
+          <h3>Debug Information</h3>
+          <pre>{debugInfo}</pre>
+        </div>
+      )}
       
       {error && (
         <div className="error-message">
@@ -138,22 +237,24 @@ function GitHubIntegration({ todos }) {
         <div id="maincontent">
           {/* Active Tasks for Branch Creation */}
           <div className="task-section-header">
-            <h2>Tasks Available for Branch Creation <span className="task-count">{todos.filter(todo => !todo.done && !branches.some(b => b.taskId === todo.id)).length}</span></h2>
+            <h2>Tasks Available for Branch Creation <span className="task-count">
+              {todos.filter(todo => !todo.done && !taskHasBranch(todo.id)).length}
+            </span></h2>
           </div>
           
           <table className="itemlist">
             <TableBody>
-            {todos.filter(todo => !todo.done && !branches.some(b => b.taskId === todo.id)).length === 0 ? (
+            {todos.filter(todo => !todo.done && !taskHasBranch(todo.id)).length === 0 ? (
               <tr>
                 <td colSpan="3" className="empty-message">
                   No tasks available for branch creation.
                 </td>
               </tr>
             ) : (
-              todos.filter(todo => !todo.done && !branches.some(b => b.taskId === todo.id)).map(todo => (
+              todos.filter(todo => !todo.done && !taskHasBranch(todo.id)).map(todo => (
                 <tr key={`todo-${todo.id}`}>
                   <td className="description">{todo.description}</td>
-                  <td className="date"><Moment format="MMM Do HH:mm">{todo.createdAt}</Moment></td>
+                  <td className="date">{todo.createdAt && <Moment format="MMM Do HH:mm">{todo.createdAt}</Moment>}</td>
                   <td>
                     <Button 
                       variant="contained" 
@@ -172,117 +273,43 @@ function GitHubIntegration({ todos }) {
           
           {/* Branches Section */}
           <div className="task-section-header">
-            <h2>Active Branches <span className="task-count">{branches.filter(b => b.status === 'active').length}</span></h2>
+            <h2>Repository Branches <span className="task-count">{branches.length}</span></h2>
+            <Button 
+              variant="outlined" 
+              size="small" 
+              onClick={() => fetchBranches()}
+              style={{ marginLeft: 'auto' }}
+            >
+              Refresh
+            </Button>
           </div>
           
           <table className="itemlist">
             <TableBody>
-            {branches.filter(b => b.status === 'active').length === 0 ? (
-              <tr>
-                <td colSpan="4" className="empty-message">
-                  No active branches.
-                </td>
-              </tr>
-            ) : (
-              branches.filter(b => b.status === 'active').map(branch => {
-                const hasPR = pullRequests.some(pr => pr.branchId === branch.id);
-                return (
-                  <tr key={`branch-${branch.id}`}>
-                    <td className="description">{branch.name}</td>
-                    <td className="date"><Moment format="MMM Do HH:mm">{branch.createdAt}</Moment></td>
-                    <td>
-                      {!hasPR && (
-                        <Button 
-                          variant="contained" 
-                          className="DoneButton" 
-                          onClick={() => handleCreatePR(branch.id)} 
-                          size="small"
-                        >
-                          Create PR
-                        </Button>
-                      )}
-                      {hasPR && (
-                        <span className="status-badge">Has PR</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-            </TableBody>
-          </table>
-          
-          {/* Pull Requests Section */}
-          <div className="task-section-header">
-            <h2>Pull Requests <span className="task-count">{pullRequests.filter(pr => pr.status === 'open').length}</span></h2>
-          </div>
-          
-          <table className="itemlist">
-            <TableBody>
-            {pullRequests.filter(pr => pr.status === 'open').length === 0 ? (
-              <tr>
-                <td colSpan="5" className="empty-message">
-                  No open pull requests.
-                </td>
-              </tr>
-            ) : (
-              pullRequests.filter(pr => pr.status === 'open').map(pr => (
-                <tr key={`pr-${pr.id}`} className={pr.ciStatus === 'failed' ? 'ci-failed' : ''}>
-                  <td className="description">{pr.title}</td>
-                  <td className="date"><Moment format="MMM Do HH:mm">{pr.createdAt}</Moment></td>
-                  <td>
-                    <span className={`ci-status ci-${pr.ciStatus}`}>
-                      CI: {pr.ciStatus === 'running' ? 'Running...' : pr.ciStatus}
-                    </span>
-                  </td>
-                  <td>
-                    {pr.ciStatus === 'success' && (
-                      <Button 
-                        variant="contained" 
-                        className="DoneButton" 
-                        onClick={() => handleMergePR(pr.id)} 
-                        size="small"
-                      >
-                        Merge PR
-                      </Button>
-                    )}
-                    {pr.ciStatus === 'failed' && (
-                      <Button 
-                        variant="contained" 
-                        className="DeleteButton" 
-                        disabled 
-                        size="small"
-                      >
-                        CI Failed
-                      </Button>
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-            </TableBody>
-          </table>
-          
-          {/* Merged PRs Section */}
-          <div className="task-section-header">
-            <h2>Merged Pull Requests <span className="task-count">{pullRequests.filter(pr => pr.status === 'merged').length}</span></h2>
-          </div>
-          
-          <table className="itemlist">
-            <TableBody>
-            {pullRequests.filter(pr => pr.status === 'merged').length === 0 ? (
+            {branches.length === 0 ? (
               <tr>
                 <td colSpan="3" className="empty-message">
-                  No merged pull requests.
+                  No branches found in repository.
                 </td>
               </tr>
             ) : (
-              pullRequests.filter(pr => pr.status === 'merged').map(pr => (
-                <tr key={`merged-pr-${pr.id}`}>
-                  <td className="description">{pr.title}</td>
-                  <td className="date"><Moment format="MMM Do HH:mm">{pr.createdAt}</Moment></td>
+              branches.map((branch, index) => (
+                <tr key={`branch-${index}`}>
+                  <td className="description">{branch.name}</td>
+                  <td className="date">
+                    {branch.commit && branch.commit.sha && 
+                      <span className="commit-sha">#{branch.commit.sha.substring(0, 7)}</span>
+                    }
+                  </td>
                   <td>
-                    <span className="status-badge merged">Merged to Production</span>
+                    <a 
+                      href={`https://github.com/${owner}/${repo}/tree/${branch.name}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="github-link"
+                    >
+                      View on GitHub
+                    </a>
                   </td>
                 </tr>
               ))
@@ -292,9 +319,9 @@ function GitHubIntegration({ todos }) {
         </div>
       )}
       
-      {/* Diálogos */}
+      {/* Diálogo para crear una rama */}
       <Dialog open={openCreateBranchDialog} onClose={() => setOpenCreateBranchDialog(false)}>
-        <DialogTitle>Create Branch</DialogTitle>
+        <DialogTitle>Create Branch for {owner}/{repo}</DialogTitle>
         <DialogContent>
           <p>Creating branch for task: {selectedTask?.description}</p>
           <TextField
@@ -308,12 +335,91 @@ function GitHubIntegration({ todos }) {
             value={branchName}
             onChange={(e) => setBranchName(e.target.value)}
           />
+          <p className="dialog-help-text">
+            The branch will be created from the repository's main branch.
+          </p>
+          
+          {/* Mostrar información del endpoint para depuración */}
+          {showDebug && (
+            <div className="debug-endpoint-info">
+              <h4>Endpoint Information</h4>
+              <p>Create Branch URL: {GITHUB_CREATE_BRANCH}</p>
+              <p>Owner: {owner}</p>
+              <p>Repo: {repo}</p>
+              <p>Task ID: {selectedTask?.id}</p>
+              <p>Base Branch: main</p>
+            </div>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenCreateBranchDialog(false)} className="DeleteButton">Cancel</Button>
-          <Button onClick={confirmCreateBranch} className="DoneButton">Create</Button>
+          <Button onClick={confirmCreateBranch} className="DoneButton" disabled={isLoading || !branchName}>
+            {isLoading ? 'Creating...' : 'Create Branch'}
+          </Button>
         </DialogActions>
       </Dialog>
+      
+      {/* Notificaciones */}
+      <Snackbar 
+        open={notification.open} 
+        autoHideDuration={6000} 
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseNotification} 
+          severity={notification.severity}
+          sx={{ width: '100%' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
+      
+      {/* Estilos adicionales para depuración */}
+      <style jsx>{`
+        .debug-info {
+          background-color: rgba(0, 0, 0, 0.7);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 4px;
+          padding: 10px;
+          margin-bottom: 20px;
+          overflow: auto;
+          max-height: 200px;
+        }
+        
+        .debug-info h3 {
+          margin-top: 0;
+          color: #C74634;
+          font-size: 16px;
+        }
+        
+        .debug-info pre {
+          color: rgba(255, 255, 255, 0.7);
+          font-family: monospace;
+          font-size: 12px;
+          white-space: pre-wrap;
+          word-break: break-all;
+        }
+        
+        .debug-endpoint-info {
+          margin-top: 15px;
+          padding: 10px;
+          background-color: rgba(0, 0, 0, 0.5);
+          border-radius: 4px;
+        }
+        
+        .debug-endpoint-info h4 {
+          margin-top: 0;
+          color: #C74634;
+          font-size: 14px;
+        }
+        
+        .debug-endpoint-info p {
+          margin: 5px 0;
+          font-size: 12px;
+          font-family: monospace;
+        }
+      `}</style>
     </div>
   );
 }

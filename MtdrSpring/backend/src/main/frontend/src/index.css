@@ -124,7 +124,7 @@ body {
 
 /* Logos y elementos corporativos */
 .oracle-logo {
-  height: 80px;
+  height: 180px !important; /* Forzar altura */
   display: inline-block;
   margin-bottom: var(--space-md);
 }
@@ -180,6 +180,40 @@ h2::before {
   height: 20px;
   background-color: var(--oracle-red);
   border-radius: var(--radius-sm);
+}
+
+/* Pestañas de navegación mejoradas */
+.app-tabs {
+  display: flex;
+  margin-bottom: var(--space-xl);
+  width: 100%;
+  background-color: var(--trans-07);
+  border-radius: var(--radius-md);
+  padding: 5px;
+  box-shadow: var(--shadow-sm);
+}
+
+.app-tab {
+  flex: 1;
+  text-align: center;
+  padding: 12px 20px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all 0.3s ease;
+  font-weight: 500;
+  font-size: var(--font-md);
+  color: var(--trans-70);
+}
+
+.app-tab.active {
+  background-color: var(--oracle-red);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.app-tab:not(.active):hover {
+  background-color: var(--trans-15);
+  color: var(--trans-90);
 }
 
 /* Formulario de entrada de tareas */
@@ -346,13 +380,13 @@ table.itemlist td.date {
   color: var(--trans-90);
 }
 
-/* Status dropdown in table */
+/* Status dropdown in table - mejorado */
 .status-actions select {
+  background-color: var(--trans-15);
+  color: var(--oracle-text);
+  border: 1px solid var(--trans-25);
   padding: 6px 10px;
   border-radius: var(--radius-md);
-  background-color: var(--trans-07);
-  border: 1px solid var(--trans-10);
-  color: white;
   font-size: var(--font-sm);
   appearance: none;
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
@@ -370,7 +404,7 @@ table.itemlist td.date {
 }
 
 .status-actions select:hover {
-  background-color: var(--trans-15);
+  background-color: var(--trans-25);
 }
 
 /* Estilos para botones MUI */
@@ -445,7 +479,7 @@ button.MuiButton-root.DoneButton:hover {
   box-shadow: 0 4px 15px var(--trans-10);
 }
 
-/* Filtros */
+/* Filtros - mejorados */
 .filters {
   display: flex;
   flex-wrap: wrap;
@@ -469,12 +503,12 @@ button.MuiButton-root.DoneButton:hover {
 }
 
 .filter-group select {
-  padding: 6px 10px;
+  padding: 8px 12px;
   border-radius: var(--radius-md);
-  background-color: var(--trans-07);
-  border: 1px solid var(--trans-10);
-  color: white;
-  font-size: var(--font-sm);
+  background-color: var(--trans-10);
+  border: 1px solid var(--trans-15);
+  color: var(--oracle-text);
+  font-size: var(--font-md);
   appearance: none;
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
   background-repeat: no-repeat;
@@ -487,6 +521,10 @@ button.MuiButton-root.DoneButton:hover {
   outline: none;
   border-color: var(--oracle-red);
   box-shadow: 0 0 0 3px rgba(199, 70, 52, 0.25);
+}
+
+.filter-group select:hover {
+  background-color: var(--trans-15);
 }
 
 /* Fix para botones deshabilitados */
@@ -720,6 +758,225 @@ button.delete-task:hover {
   }
 }
 
+/* Estilos para el formulario expandido - mejorado */
+.form-main-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-bottom: var(--space-sm);
+}
+
+.expand-button {
+  margin-left: var(--space-sm) !important;
+  background-color: var(--trans-10) !important;
+  color: var(--oracle-red) !important;
+}
+
+.expand-button:hover {
+  background-color: var(--trans-15) !important;
+}
+
+.form-expanded {
+  background-color: var(--trans-10);
+  padding: var(--space-lg);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-lg);
+  animation: fadeIn 0.3s ease-out;
+  border: 1px solid var(--trans-15);
+  box-shadow: var(--shadow-sm);
+}
+
+.form-row {
+  margin-bottom: var(--space-lg);
+}
+
+.form-selects {
+  display: flex;
+  gap: var(--space-lg);
+}
+
+.status-select, .priority-select {
+  flex: 1;
+  min-width: 150px;
+}
+
+.custom-text-field .MuiOutlinedInput-root {
+  background-color: var(--trans-15);
+  color: var(--oracle-text);
+  border-radius: var(--radius-md);
+}
+
+.custom-text-field .MuiOutlinedInput-input {
+  padding: 14px 16px;
+  font-size: var(--font-md);
+}
+
+.custom-text-field .MuiOutlinedInput-notchedOutline {
+  border-color: var(--trans-25);
+  border-width: 1px;
+}
+
+.custom-text-field:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--trans-40);
+}
+
+.custom-text-field.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: var(--oracle-red);
+}
+
+.custom-input-label {
+  color: var(--trans-90) !important;
+  font-size: var(--font-md) !important;
+  font-weight: 500 !important;
+}
+
+.custom-select {
+  background-color: var(--trans-15) !important;
+  color: var(--oracle-text) !important;
+}
+
+.custom-select .MuiOutlinedInput-notchedOutline {
+  border-color: var(--trans-25) !important;
+}
+
+.custom-select:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--trans-40) !important;
+}
+
+.custom-select.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: var(--oracle-red) !important;
+}
+
+/* Mejorando los estilos para el selector de estado */
+.status-actions select {
+  background-color: var(--trans-15);
+  color: var(--oracle-text);
+  border: 1px solid var(--trans-25);
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-sm);
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+  padding-right: 30px;
+  transition: all 0.3s ease;
+}
+
+.status-actions select:focus {
+  outline: none;
+  border-color: var(--oracle-red);
+  box-shadow: 0 0 0 3px rgba(199, 70, 52, 0.25);
+}
+
+/* Añadir estilo para el botón de mover a siguiente estado */
+.modal-action-button.move-next {
+  background-color: var(--trans-25) !important;
+  color: white !important;
+  border: 1px solid var(--trans-40) !important;
+}
+
+.modal-action-button.move-next:hover {
+  background-color: var(--status-in-progress) !important;
+}
+
+/* Estilos para la integración de GitHub - mejorados */
+.commit-sha {
+  font-family: monospace;
+  background-color: var(--trans-10);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  display: inline-block;
+}
+
+.github-link {
+  color: var(--oracle-text);
+  text-decoration: none;
+  background-color: var(--trans-15);
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  display: inline-block;
+  white-space: nowrap;
+  margin: 4px 0;
+}
+
+.github-link:hover {
+  background-color: var(--oracle-red);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.dialog-help-text {
+  color: var(--trans-70);
+  font-size: 0.85rem;
+  margin-top: 16px;
+}
+
+/* Estilos para diálogos Material UI - corregidos */
+.MuiDialog-paper {
+  background-color: var(--oracle-dark) !important;
+  color: var(--oracle-text) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-lg) !important;
+  padding: var(--space-md) !important;
+  border: 1px solid var(--trans-10) !important;
+}
+
+.MuiDialogTitle-root {
+  background-color: transparent !important;
+  color: var(--oracle-red) !important;
+  font-size: 1.3rem !important;
+  font-weight: 500 !important;
+  padding: var(--space-md) var(--space-md) var(--space-sm) !important;
+}
+
+.MuiDialogContent-root {
+  color: var(--oracle-text) !important;
+  padding: var(--space-md) !important;
+}
+
+.MuiDialogContent-root p {
+  margin-bottom: var(--space-md);
+}
+
+.MuiDialogActions-root {
+  padding: var(--space-md) !important;
+  border-top: 1px solid var(--trans-10) !important;
+}
+
+.MuiTextField-root {
+  margin-top: var(--space-md) !important;
+}
+
+/* Material UI Input Override para diálogos */
+.MuiDialog-paper .MuiInputBase-root {
+  background-color: var(--trans-10) !important;
+  color: var(--oracle-text) !important;
+  border-radius: var(--radius-md) !important;
+}
+
+.MuiDialog-paper .MuiInputBase-input {
+  padding: 12px 14px !important;
+  font-size: var(--font-md) !important;
+}
+
+.MuiDialog-paper .MuiOutlinedInput-notchedOutline {
+  border-color: var(--trans-25) !important;
+}
+
+.MuiDialog-paper .MuiInputLabel-root {
+  color: var(--trans-70) !important;
+  font-size: var(--font-md) !important;
+}
+
+.MuiDialog-paper .MuiInputLabel-root.Mui-focused {
+  color: var(--oracle-red) !important;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .App {
@@ -729,7 +986,7 @@ button.delete-task:hover {
   }
   
   .oracle-logo {
-    height: 60px;
+    height: 100px !important;
   }
   
   h1 {
@@ -789,6 +1046,16 @@ button.delete-task:hover {
   button.modal-action-button {
     width: 100%;
   }
+  
+  .form-selects {
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+  
+  .app-tab {
+    padding: 10px;
+    font-size: var(--font-sm);
+  }
 }
 
 @media (max-width: 480px) {
@@ -834,6 +1101,13 @@ button.delete-task:hover {
     font-size: 0.8rem;
     padding: 5px 8px;
   }
+  
+  .github-link {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    width: 100%;
+    text-align: center;
+  }
 }
 
 /* Mejoras de impresión */
@@ -870,118 +1144,4 @@ button.delete-task:hover {
     border: 1px solid #ccc;
     color: #333;
   }
-}
-
-/* Estilos para el formulario expandido */
-.form-main-row {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  margin-bottom: var(--space-sm);
-}
-
-.expand-button {
-  margin-left: var(--space-sm) !important;
-  background-color: var(--trans-07) !important;
-}
-
-.form-expanded {
-  background-color: var(--trans-05);
-  padding: var(--space-md);
-  border-radius: var(--radius-md);
-  margin-bottom: var(--space-md);
-  animation: fadeIn 0.3s ease-out;
-}
-
-.form-row {
-  margin-bottom: var(--space-md);
-}
-
-.form-selects {
-  display: flex;
-  gap: var(--space-md);
-}
-
-.status-select, .priority-select {
-  flex: 1;
-  min-width: 120px;
-}
-
-.custom-text-field .MuiOutlinedInput-root {
-  background-color: var(--trans-07);
-  color: var(--oracle-text);
-}
-
-.custom-text-field .MuiOutlinedInput-notchedOutline {
-  border-color: var(--trans-10);
-}
-
-.custom-text-field:hover .MuiOutlinedInput-notchedOutline {
-  border-color: var(--trans-25);
-}
-
-.custom-text-field.Mui-focused .MuiOutlinedInput-notchedOutline {
-  border-color: var(--oracle-red);
-}
-
-.custom-input-label {
-  color: var(--trans-70) !important;
-}
-
-.custom-select {
-  background-color: var(--trans-07);
-  color: var(--oracle-text);
-}
-
-.custom-select .MuiOutlinedInput-notchedOutline {
-  border-color: var(--trans-10);
-}
-
-.custom-select:hover .MuiOutlinedInput-notchedOutline {
-  border-color: var(--trans-25);
-}
-
-.custom-select.Mui-focused .MuiOutlinedInput-notchedOutline {
-  border-color: var(--oracle-red);
-}
-
-@media (max-width: 480px) {
-  .form-selects {
-    flex-direction: column;
-    gap: var(--space-sm);
-  }
-}
-
-/* Estilos mejorados para el selector de estado */
-.status-actions select {
-  background-color: var(--trans-15);
-  color: var(--oracle-text);
-  border: 1px solid var(--trans-25);
-  padding: 6px 10px;
-  border-radius: var(--radius-md);
-  font-size: var(--font-sm);
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 8px center;
-  background-size: 16px;
-  padding-right: 30px;
-  transition: all 0.3s ease;
-}
-
-.status-actions select:focus {
-  outline: none;
-  border-color: var(--oracle-red);
-  box-shadow: 0 0 0 3px rgba(199, 70, 52, 0.25);
-}
-
-/* Añadir estilo para el botón de mover a siguiente estado */
-.modal-action-button.move-next {
-  background-color: var(--trans-25) !important;
-  color: white !important;
-  border: 1px solid var(--trans-40) !important;
-}
-
-.modal-action-button.move-next:hover {
-  background-color: var(--status-in-progress) !important;
 }

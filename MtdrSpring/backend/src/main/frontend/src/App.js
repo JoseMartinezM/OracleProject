@@ -7,7 +7,8 @@
 
 import React, { useState, useEffect } from 'react';
 import NewItem from './NewItem';
-import API_LIST from './API';
+import GitHubIntegration from './GitHubIntegration';
+import { API_LIST } from './API';
 import { Button, TableBody, Modal, Box, Typography, IconButton } from '@mui/material';
 import Moment from 'react-moment';
 import CloseIcon from '@mui/icons-material/Close';
@@ -20,7 +21,10 @@ function App() {
     const [items, setItems] = useState([]);
     const [error, setError] = useState();
     
-    // Nuevos estados para filtrar tareas
+    // Estado para la pestaña activa
+    const [activeTab, setActiveTab] = useState('tasks'); // 'tasks' o 'github'
+    
+    // Estado para filtros
     const [priorityFilter, setPriorityFilter] = useState('All');
 
     // Estado para el modal
@@ -370,79 +374,102 @@ function App() {
         
         <h1>TODO LIST</h1>
         
-        <NewItem addItem={addItem} isInserting={isInserting}/>
-        
-        { error &&
-          <div className="error-message">
-            <p>Error: {error.message}</p>
+        {/* Pestañas de navegación */}
+        <div className="app-tabs">
+          <div 
+            className={`app-tab ${activeTab === 'tasks' ? 'active' : ''}`}
+            onClick={() => setActiveTab('tasks')}
+          >
+            Tasks
           </div>
-        }
-        
-        {/* Filtros (solo por prioridad) */}
-        <div className="filters">
-          <div className="filter-group">
-            <label>Priority:</label>
-            <select 
-              value={priorityFilter} 
-              onChange={(e) => setPriorityFilter(e.target.value)}
-            >
-              {priorityOptions.map(option => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
+          <div 
+            className={`app-tab ${activeTab === 'github' ? 'active' : ''}`}
+            onClick={() => setActiveTab('github')}
+          >
+            GitHub Integration
           </div>
         </div>
         
-        { isLoading ? (
-          <div className="loading-container">
-            <div className="loading-spinner"></div>
-          </div>
+        {/* Contenido condicional según la pestaña activa */}
+        {activeTab === 'tasks' ? (
+          <>
+            <NewItem addItem={addItem} isInserting={isInserting}/>
+            
+            { error &&
+              <div className="error-message">
+                <p>Error: {error.message}</p>
+              </div>
+            }
+            
+            {/* Filtros (solo por prioridad) */}
+            <div className="filters">
+              <div className="filter-group">
+                <label>Priority:</label>
+                <select 
+                  value={priorityFilter} 
+                  onChange={(e) => setPriorityFilter(e.target.value)}
+                >
+                  {priorityOptions.map(option => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            
+            { isLoading ? (
+              <div className="loading-container">
+                <div className="loading-spinner"></div>
+              </div>
+            ) : (
+              <div id="maincontent">
+                {/* Pending Tasks Section */}
+                <div className="task-section-header">
+                  <h2>Pending <span className="task-count">{pendingItems.length}</span></h2>
+                </div>
+                
+                <table className="itemlist">
+                  <TableBody>
+                    {renderTaskRows(pendingItems)}
+                  </TableBody>
+                </table>
+                
+                {/* In Progress Tasks Section */}
+                <div className="task-section-header">
+                  <h2>In Progress <span className="task-count">{inProgressItems.length}</span></h2>
+                </div>
+                
+                <table className="itemlist">
+                  <TableBody>
+                    {renderTaskRows(inProgressItems)}
+                  </TableBody>
+                </table>
+                
+                {/* In Review Tasks Section */}
+                <div className="task-section-header">
+                  <h2>In Review <span className="task-count">{inReviewItems.length}</span></h2>
+                </div>
+                
+                <table className="itemlist">
+                  <TableBody>
+                    {renderTaskRows(inReviewItems)}
+                  </TableBody>
+                </table>
+                
+                {/* Completed Tasks Section */}
+                <div className="task-section-header">
+                  <h2>Completed <span className="task-count">{completedItems.length}</span></h2>
+                </div>
+                
+                <table className="itemlist">
+                  <TableBody>
+                    {renderTaskRows(completedItems)}
+                  </TableBody>
+                </table>
+              </div>
+            )}
+          </>
         ) : (
-          <div id="maincontent">
-            {/* Pending Tasks Section */}
-            <div className="task-section-header">
-              <h2>Pending <span className="task-count">{pendingItems.length}</span></h2>
-            </div>
-            
-            <table className="itemlist">
-              <TableBody>
-                {renderTaskRows(pendingItems)}
-              </TableBody>
-            </table>
-            
-            {/* In Progress Tasks Section */}
-            <div className="task-section-header">
-              <h2>In Progress <span className="task-count">{inProgressItems.length}</span></h2>
-            </div>
-            
-            <table className="itemlist">
-              <TableBody>
-                {renderTaskRows(inProgressItems)}
-              </TableBody>
-            </table>
-            
-            {/* In Review Tasks Section */}
-            <div className="task-section-header">
-              <h2>In Review <span className="task-count">{inReviewItems.length}</span></h2>
-            </div>
-            
-            <table className="itemlist">
-              <TableBody>
-                {renderTaskRows(inReviewItems)}
-              </TableBody>
-            </table>
-            
-            {/* Completed Tasks Section */}
-            <div className="task-section-header">
-              <h2>Completed <span className="task-count">{completedItems.length}</span></h2>
-            </div>
-            
-            <table className="itemlist">
-              <TableBody>
-                {renderTaskRows(completedItems)}
-              </TableBody>
-            </table>
-          </div>
+          <GitHubIntegration todos={items} />
         )}
 
         {/* Modal para detalles de tarea */}
