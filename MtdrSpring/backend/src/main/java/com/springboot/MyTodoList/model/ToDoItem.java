@@ -1,31 +1,56 @@
 package com.springboot.MyTodoList.model;
 
-
 import javax.persistence.*;
 import java.time.OffsetDateTime;
 
-/*
-    representation of the TODOITEM table that exists already
-    in the autonomous database
- */
 @Entity
 @Table(name = "TODOITEM")
 public class ToDoItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int ID;
-    @Column(name = "DESCRIPTION")
+    
+    @Column(name = "DESCRIPTION", nullable = false, length = 4000)
     String description;
+    
+    @Column(name = "STEPS", length = 4000)
+    String steps;
+    
+    @Column(name = "STATUS", length = 50)
+    String status = "Pending";
+    
+    @Column(name = "PRIORITY", length = 20)
+    String priority = "Medium";
+    
+    @Column(name = "ASSIGNED_TO")
+    Integer assignedTo;
+    
+    @Column(name = "CREATED_BY")
+    Integer createdBy;
+    
+    @Column(name = "IS_ARCHIVED")
+    Integer isArchived = 0;
+    
     @Column(name = "CREATION_TS")
     OffsetDateTime creation_ts;
-    @Column(name = "done")
-    boolean done;
-    public ToDoItem(){
+    
+    @Column(name = "DONE")
+    Boolean done = false;  // Cambiado de boolean primitivo a Boolean objeto
 
+    public ToDoItem() {
     }
-    public ToDoItem(int ID, String description, OffsetDateTime creation_ts, boolean done) {
+
+    public ToDoItem(int ID, String description, String steps, String status, String priority, 
+                    Integer assignedTo, Integer createdBy, Integer isArchived, 
+                    OffsetDateTime creation_ts, Boolean done) {
         this.ID = ID;
         this.description = description;
+        this.steps = steps;
+        this.status = status;
+        this.priority = priority;
+        this.assignedTo = assignedTo;
+        this.createdBy = createdBy;
+        this.isArchived = isArchived;
         this.creation_ts = creation_ts;
         this.done = done;
     }
@@ -46,6 +71,54 @@ public class ToDoItem {
         this.description = description;
     }
 
+    public String getSteps() {
+        return steps;
+    }
+
+    public void setSteps(String steps) {
+        this.steps = steps;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getPriority() {
+        return priority;
+    }
+
+    public void setPriority(String priority) {
+        this.priority = priority;
+    }
+
+    public Integer getAssignedTo() {
+        return assignedTo;
+    }
+
+    public void setAssignedTo(Integer assignedTo) {
+        this.assignedTo = assignedTo;
+    }
+
+    public Integer getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(Integer createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public Integer getIsArchived() {
+        return isArchived;
+    }
+
+    public void setIsArchived(Integer isArchived) {
+        this.isArchived = isArchived;
+    }
+
     public OffsetDateTime getCreation_ts() {
         return creation_ts;
     }
@@ -54,11 +127,12 @@ public class ToDoItem {
         this.creation_ts = creation_ts;
     }
 
-    public boolean isDone() {
+    // Cambiado el método getter para Boolean
+    public Boolean isDone() {
         return done;
     }
 
-    public void setDone(boolean done) {
+    public void setDone(Boolean done) {
         this.done = done;
     }
 
@@ -67,6 +141,12 @@ public class ToDoItem {
         return "ToDoItem{" +
                 "ID=" + ID +
                 ", description='" + description + '\'' +
+                ", steps='" + steps + '\'' +
+                ", status='" + status + '\'' +
+                ", priority='" + priority + '\'' +
+                ", assignedTo=" + assignedTo +
+                ", createdBy=" + createdBy +
+                ", isArchived=" + isArchived +
                 ", creation_ts=" + creation_ts +
                 ", done=" + done +
                 '}';

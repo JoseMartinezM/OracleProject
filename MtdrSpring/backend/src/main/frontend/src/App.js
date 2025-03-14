@@ -161,7 +161,7 @@ function App() {
           className="oracle-logo" 
         />
         
-        <h1>ORACLE TODO LIST</h1>
+        <h1>TODO LIST</h1>
         
         {/* Pestañas de navegación */}
         <div className="app-tabs">
