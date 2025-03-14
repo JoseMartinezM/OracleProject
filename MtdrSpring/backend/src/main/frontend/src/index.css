@@ -5,24 +5,73 @@
 ** Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/
 */
 
-/* Colores oficiales de Oracle */
+/* Variables CSS - Colores oficiales de Oracle y configuraciones */
 :root {
-  --oracle-red: #C74634; /* Oracle Red - Pantone 3516 C */
-  --oracle-dark: #312D2A; /* Oracle Bark - Pantone 7533 C */
+  /* Colores base */
+  --oracle-red: #C74634;
+  --oracle-dark: #312D2A;
   --oracle-dark-shadow: #252220;
   --oracle-text: #FFFFFF;
   --oracle-gray-border: #5B5652;
   --oracle-gray-light: #E8E8E8;
   --oracle-white: #FFFFFF;
+  
+  /* Transparencias comunes */
+  --trans-05: rgba(255, 255, 255, 0.05);
+  --trans-07: rgba(255, 255, 255, 0.07);
+  --trans-10: rgba(255, 255, 255, 0.1);
+  --trans-15: rgba(255, 255, 255, 0.15);
+  --trans-25: rgba(255, 255, 255, 0.25);
+  --trans-40: rgba(255, 255, 255, 0.4);
+  --trans-70: rgba(255, 255, 255, 0.7);
+  --trans-90: rgba(255, 255, 255, 0.9);
+  
+  /* Colores para estados */
+  --status-pending: var(--trans-15);
+  --status-in-progress: rgba(255, 193, 7, 0.3);
+  --status-in-review: rgba(3, 169, 244, 0.3);
+  --status-completed: rgba(76, 175, 80, 0.3);
+  
+  /* Colores para prioridades */
+  --priority-low: rgba(76, 175, 80, 0.3);
+  --priority-medium: rgba(3, 169, 244, 0.3);
+  --priority-high: rgba(255, 152, 0, 0.3);
+  --priority-critical: rgba(244, 67, 54, 0.3);
+  
+  /* Sombras y efectos */
+  --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 5px 15px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.4);
+  --shadow-red: 0 4px 15px rgba(199, 70, 52, 0.4);
+  
+  /* Bordes y radios */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 20px;
+  
+  /* Espaciados */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-xxl: 3rem;
+  
+  /* Fuentes */
+  --font-sm: 0.75rem;
+  --font-md: 0.9rem;
+  --font-lg: 1rem;
+  --font-xl: 1.3rem;
+  --font-xxl: 1.8rem;
 }
 
+/* Estilos base */
 body {
   background: linear-gradient(135deg, var(--oracle-dark) 0%, #1A1A18 100%);
   background-attachment: fixed;
   color: var(--oracle-text);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   margin: 0;
@@ -47,13 +96,13 @@ body {
   align-items: center;
   font-size: max(14px, min(2vw, 16px));
   margin: 0 auto;
-  padding: 2rem;
+  padding: var(--space-xl);
   position: relative;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-  border-radius: 1rem;
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-md);
   transition: all 0.3s ease;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--trans-05);
 }
 
 /* Efecto de brillo en los bordes */
@@ -73,15 +122,11 @@ body {
   100% { transform: translateX(100%); }
 }
 
-.oracle-logo-container {
-  margin-bottom: 1.5rem;
-  text-align: center;
-}
-
+/* Logos y elementos corporativos */
 .oracle-logo {
-  height: 40px;
+  height: 80px;
   display: inline-block;
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-md);
 }
 
 div#maincontent, div#newinputform form {
@@ -93,11 +138,12 @@ div#maincontent {
   padding: 0;
 }
 
+/* Títulos y encabezados */
 h1 {
-  margin: 0.5rem 0 1.5rem 0;
+  margin: var(--space-sm) 0 var(--space-lg) 0;
   padding: 0;
   text-align: center;
-  font-size: 1.8rem;
+  font-size: var(--font-xxl);
   letter-spacing: 2px;
   color: var(--oracle-red);
   position: relative;
@@ -117,12 +163,11 @@ h1::after {
 }
 
 h2 {
-  margin: 0.5rem 0 1rem 0;
-  padding: 0;
-  font-size: 1.3rem;
+  margin: var(--space-sm) 0 var(--space-md) 0;
+  padding: 0 0 0 var(--space-lg);
+  font-size: var(--font-xl);
   color: #e6e6e6;
   position: relative;
-  padding-left: 1.5rem;
 }
 
 h2::before {
@@ -134,47 +179,49 @@ h2::before {
   width: 8px;
   height: 20px;
   background-color: var(--oracle-red);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
 }
 
+/* Formulario de entrada de tareas */
 #newiteminput {
   width: 100%;
   padding: 12px 15px;
-  background-color: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  color: #FFFFFF;
-  font-size: 1rem;
+  background-color: var(--trans-07);
+  border: 1px solid var(--trans-10);
+  border-radius: var(--radius-md);
+  color: var(--oracle-text);
+  font-size: var(--font-lg);
   transition: all 0.3s ease;
   box-sizing: border-box;
   height: 46px;
 }
 
 #newiteminput:focus {
-  background-color: rgba(255, 255, 255, 0.12);
+  background-color: var(--trans-15);
   border-color: var(--oracle-red);
   outline: none;
   box-shadow: 0 0 0 3px rgba(199, 70, 52, 0.25);
 }
 
 #newiteminput::placeholder {
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--trans-40);
 }
 
 div#newinputform {
   width: 100%;
-  margin-bottom: 2.5rem;
+  margin-bottom: var(--space-xl);
 }
 
 div#newinputform form {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 0.8rem;
+  gap: var(--space-md);
 }
 
+/* Lista de tareas completadas */
 #donelist {
-  margin: 1.5rem 0 1rem 0;
+  margin: var(--space-lg) 0 var(--space-md) 0;
   padding: 0;
   display: flex;
   align-items: center;
@@ -184,41 +231,44 @@ div#newinputform form {
   content: '✓';
   display: inline-block;
   color: var(--oracle-text);
-  margin-right: 0.5rem;
+  margin-right: var(--space-sm);
   font-weight: bold;
   font-size: 1.2em;
 }
 
+/* Tablas de tareas */
 table#itemlistNotDone {
-  margin-bottom: 2.5rem;
+  margin-bottom: var(--space-xl);
   width: 100%;
 }
 
 table#itemlistDone {
-  margin-bottom: 3rem;
+  margin-bottom: var(--space-xxl);
   width: 100%;
 }
 
 table.itemlist {
-  margin-top: 1rem;
+  margin-top: var(--space-md);
   border-collapse: separate;
   border-spacing: 0 8px;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--space-lg);
   width: 100%;
 }
 
-table.itemlist tr {
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+/* Filas de tareas */
+table.itemlist tr.task-row {
+  background: var(--trans-05);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
   transition: all 0.3s ease;
   animation: fadeIn 0.5s ease-out;
+  cursor: pointer;
 }
 
-table.itemlist tr:hover {
-  background: rgba(255, 255, 255, 0.06);
+table.itemlist tr.task-row:hover {
+  background: var(--trans-10);
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-md);
 }
 
 table.itemlist td {
@@ -227,18 +277,28 @@ table.itemlist td {
 }
 
 table.itemlist td:first-child {
-  border-radius: 8px 0 0 8px;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
 }
 
 table.itemlist td:last-child {
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
 }
 
 table.itemlist td.description {
   width: 100%;
-  padding: 1rem;
+  padding: var(--space-md);
   word-break: break-word;
-  font-size: 1rem;
+  font-size: var(--font-lg);
+}
+
+/* Pasos dentro de la descripción */
+.steps {
+  margin-top: var(--space-sm);
+  font-size: 0.85rem;
+  opacity: 0.7;
+  padding-left: var(--space-sm);
+  border-left: 2px solid var(--trans-10);
+  white-space: pre-line;
 }
 
 /* Estilo para items completados */
@@ -248,10 +308,69 @@ table.itemlist td.description {
 }
 
 table.itemlist td.date {
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: var(--font-sm);
+  color: var(--trans-70);
   white-space: nowrap;
-  padding-right: 1rem;
+  padding-right: var(--space-md);
+}
+
+/* Estilos para status y prioridad */
+.status-priority {
+  white-space: nowrap;
+}
+
+.status, .priority {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: var(--radius-lg);
+  font-size: var(--font-sm);
+  margin-right: 5px;
+  margin-bottom: 5px;
+}
+
+.status {
+  background-color: var(--trans-10);
+}
+
+.status-pending { background-color: var(--status-pending); }
+.status-in-progress { background-color: var(--status-in-progress); }
+.status-in-review { background-color: var(--status-in-review); }
+.status-completed { background-color: var(--status-completed); }
+
+.priority-low { background-color: var(--priority-low); }
+.priority-medium { background-color: var(--priority-medium); }
+.priority-high { background-color: var(--priority-high); }
+.priority-critical { background-color: var(--priority-critical); }
+
+.status, .priority {
+  color: var(--trans-90);
+}
+
+/* Status dropdown in table */
+.status-actions select {
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  background-color: var(--trans-07);
+  border: 1px solid var(--trans-10);
+  color: white;
+  font-size: var(--font-sm);
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+  padding-right: 30px;
+  transition: all 0.3s ease;
+}
+
+.status-actions select:focus {
+  outline: none;
+  border-color: var(--oracle-red);
+  box-shadow: 0 0 0 3px rgba(199, 70, 52, 0.25);
+}
+
+.status-actions select:hover {
+  background-color: var(--trans-15);
 }
 
 /* Estilos para botones MUI */
@@ -260,9 +379,9 @@ button.MuiButton-root.AddButton {
   color: white;
   padding: 0 1.2rem;
   height: 46px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   transition: all 0.3s ease;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-sm);
   font-weight: 600;
   letter-spacing: 0.5px;
   border: none;
@@ -270,20 +389,20 @@ button.MuiButton-root.AddButton {
   align-items: center;
   justify-content: center;
   min-width: 100px;
-  font-size: 0.9rem;
+  font-size: var(--font-md);
   text-transform: none;
 }
 
 button.MuiButton-root.AddButton:hover {
   background-color: #d8584a;
-  box-shadow: 0 4px 15px rgba(199, 70, 52, 0.4);
+  box-shadow: var(--shadow-red);
 }
 
 button.MuiButton-root.AddButton::before {
   content: "+";
   font-size: 1.4rem;
   font-weight: 700;
-  margin-right: 0.5rem;
+  margin-right: var(--space-sm);
   line-height: 0;
 }
 
@@ -294,15 +413,15 @@ button.MuiButton-root.AddButton:active {
 button.MuiButton-root.DeleteButton {
   background-color: var(--oracle-red);
   color: white;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   transition: all 0.3s ease;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-sm);
   text-transform: none;
 }
 
 button.MuiButton-root.DeleteButton:hover {
   background-color: #d8584a;
-  box-shadow: 0 4px 15px rgba(199, 70, 52, 0.4);
+  box-shadow: var(--shadow-red);
 }
 
 button.MuiButton-root.DeleteButton::before {
@@ -314,22 +433,66 @@ button.MuiButton-root.DeleteButton::before {
 }
 
 button.MuiButton-root.DoneButton {
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: var(--trans-15);
   color: white;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   transition: all 0.3s ease;
   text-transform: none;
 }
 
 button.MuiButton-root.DoneButton:hover {
-  background-color: rgba(255, 255, 255, 0.25);
-  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+  background-color: var(--trans-25);
+  box-shadow: 0 4px 15px var(--trans-10);
+}
+
+/* Filtros */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+  background: var(--trans-05);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--trans-05);
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.filter-group label {
+  font-size: var(--font-md);
+  color: var(--trans-70);
+}
+
+.filter-group select {
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  background-color: var(--trans-07);
+  border: 1px solid var(--trans-10);
+  color: white;
+  font-size: var(--font-sm);
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+  padding-right: 30px;
+}
+
+.filter-group select:focus {
+  outline: none;
+  border-color: var(--oracle-red);
+  box-shadow: 0 0 0 3px rgba(199, 70, 52, 0.25);
 }
 
 /* Fix para botones deshabilitados */
 button.MuiButton-root.Mui-disabled {
   background: #4a4a4a;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--trans-40);
 }
 
 /* Loading container */
@@ -337,11 +500,11 @@ button.MuiButton-root.Mui-disabled {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 3rem 0;
+  padding: var(--space-xxl) 0;
 }
 
 .loading-spinner {
-  border: 4px solid rgba(255, 255, 255, 0.1);
+  border: 4px solid var(--trans-10);
   border-radius: 50%;
   border-top: 4px solid var(--oracle-red);
   width: 40px;
@@ -357,12 +520,12 @@ button.MuiButton-root.Mui-disabled {
 /* Mensaje de estado vacío */
 .empty-message {
   text-align: center;
-  padding: 2rem 0;
-  color: rgba(255, 255, 255, 0.4);
+  padding: var(--space-xl) 0;
+  color: var(--trans-40);
   font-style: italic;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 8px;
-  margin: 1rem 0;
+  background: var(--trans-05);
+  border-radius: var(--radius-md);
+  margin: var(--space-md) 0;
 }
 
 /* Estilo de mensaje de error */
@@ -371,13 +534,13 @@ button.MuiButton-root.Mui-disabled {
   border-left: 4px solid var(--oracle-red);
   padding: 15px;
   margin-bottom: 20px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   color: #ffcccc;
 }
 
 /* Encabezado de sección de tareas */
 .task-section-header {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--trans-10);
   margin-bottom: 15px;
   padding-bottom: 10px;
 }
@@ -387,13 +550,138 @@ button.MuiButton-root.Mui-disabled {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.8rem;
-  border-radius: 20px;
+  background: var(--trans-10);
+  color: var(--trans-70);
+  font-size: var(--font-sm);
+  border-radius: var(--radius-xl);
   padding: 0.2rem 0.7rem;
   margin-left: 0.8rem;
   min-width: 20px;
+}
+
+/* Estilos del Modal */
+.modal-header {
+  border-bottom: 1px solid var(--trans-10);
+  padding-bottom: var(--space-md);
+  margin-bottom: var(--space-lg);
+  position: relative;
+}
+
+.modal-title {
+  color: var(--oracle-red) !important;
+  font-size: 1.5rem !important;
+  font-weight: 500 !important;
+}
+
+.modal-content {
+  padding: 0 var(--space-sm);
+}
+
+.modal-section {
+  margin-bottom: var(--space-lg);
+}
+
+.modal-section-title {
+  margin-bottom: var(--space-sm) !important;
+  color: var(--trans-90) !important;
+  font-size: 1.1rem !important;
+  position: relative;
+  padding-left: var(--space-lg);
+}
+
+.modal-section-title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 16px;
+  background-color: var(--oracle-red);
+  border-radius: var(--radius-sm);
+}
+
+.modal-description {
+  font-size: var(--font-lg) !important;
+  line-height: 1.5 !important;
+  color: var(--trans-90) !important;
+}
+
+.modal-steps {
+  background-color: var(--trans-05);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.step-item {
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--trans-05);
+}
+
+.step-item:last-child {
+  border-bottom: none;
+}
+
+.modal-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-md);
+  background-color: var(--trans-05);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-lg);
+}
+
+.modal-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.modal-meta-label {
+  color: var(--trans-70) !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+}
+
+.modal-meta-value {
+  color: var(--trans-90) !important;
+  font-size: 0.9rem !important;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+}
+
+button.modal-action-button {
+  padding: 8px 16px !important;
+  border-radius: var(--radius-md) !important;
+  transition: all 0.3s ease !important;
+  text-transform: none !important;
+  font-weight: 500 !important;
+}
+
+button.update-status {
+  background-color: var(--status-in-review) !important;
+  color: white !important;
+}
+
+button.update-status:hover {
+  background-color: rgba(3, 169, 244, 0.5) !important;
+}
+
+button.delete-task {
+  background-color: var(--oracle-red) !important;
+  color: white !important;
+}
+
+button.delete-task:hover {
+  background-color: #d8584a !important;
 }
 
 /* Animaciones */
@@ -415,7 +703,7 @@ button.MuiButton-root.Mui-disabled {
 
 @keyframes highlight {
   0% { background: rgba(199, 70, 52, 0.2); }
-  100% { background: rgba(255, 255, 255, 0.03); }
+  100% { background: var(--trans-05); }
 }
 
 /* Mejora de enfoque para accesibilidad */
@@ -435,13 +723,13 @@ button.MuiButton-root.Mui-disabled {
 /* Responsive design */
 @media (max-width: 768px) {
   .App {
-    margin: 1rem;
-    padding: 1.5rem;
+    margin: var(--space-md);
+    padding: var(--space-lg);
     border-radius: 0.8rem;
   }
   
   .oracle-logo {
-    height: 30px;
+    height: 60px;
   }
   
   h1 {
@@ -450,12 +738,12 @@ button.MuiButton-root.Mui-disabled {
   
   div#newinputform form {
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--space-sm);
   }
   
   #newiteminput {
     width: 100%;
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--space-sm);
   }
   
   button.MuiButton-root.AddButton {
@@ -463,7 +751,7 @@ button.MuiButton-root.Mui-disabled {
   }
   
   table.itemlist td {
-    padding: 0.5rem;
+    padding: var(--space-sm);
   }
   
   table.itemlist td.date {
@@ -475,6 +763,31 @@ button.MuiButton-root.Mui-disabled {
     padding: 0.4rem 0.7rem;
     font-size: 0.8rem;
     min-width: 70px;
+  }
+  
+  .filters {
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+  
+  .filter-group {
+    width: 100%;
+  }
+  
+  .filter-group select {
+    flex-grow: 1;
+  }
+  
+  .modal-meta {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+  }
+  
+  button.modal-action-button {
+    width: 100%;
   }
 }
 
@@ -511,27 +824,35 @@ button.MuiButton-root.Mui-disabled {
     font-size: 0.7rem;
     padding: 0.1rem 0.5rem;
   }
+  
+  .status, .priority {
+    font-size: 0.7rem;
+    padding: 3px 6px;
+  }
+  
+  .status-actions select {
+    font-size: 0.8rem;
+    padding: 5px 8px;
+  }
 }
 
 /* Mejoras de impresión */
 @media print {
-  body {
+  body, .App {
     background: white;
     color: black;
+    box-shadow: none;
   }
   
   .App {
-    box-shadow: none;
     border: 1px solid #ccc;
-    background: white;
-    color: black;
   }
   
   h1 {
     color: var(--oracle-red);
   }
   
-  button {
+  button, .status-actions, .filters {
     display: none;
   }
   
@@ -545,21 +866,122 @@ button.MuiButton-root.Mui-disabled {
     box-shadow: none;
   }
   
-  .task-count {
+  .task-count, .status, .priority {
     border: 1px solid #ccc;
     color: #333;
   }
 }
 
-.oracle-logo {
-  height: 180px; /* Aumentado de 40px a 80px */
-  display: inline-block;
-  margin-bottom: 10px;
+/* Estilos para el formulario expandido */
+.form-main-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-bottom: var(--space-sm);
 }
 
-/* Ajuste para pantallas pequeñas */
-@media (max-width: 768px) {
-  .oracle-logo {
-    height: 5px; /* Aumentado de 30px a 60px */
+.expand-button {
+  margin-left: var(--space-sm) !important;
+  background-color: var(--trans-07) !important;
+}
+
+.form-expanded {
+  background-color: var(--trans-05);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-md);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.form-row {
+  margin-bottom: var(--space-md);
+}
+
+.form-selects {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.status-select, .priority-select {
+  flex: 1;
+  min-width: 120px;
+}
+
+.custom-text-field .MuiOutlinedInput-root {
+  background-color: var(--trans-07);
+  color: var(--oracle-text);
+}
+
+.custom-text-field .MuiOutlinedInput-notchedOutline {
+  border-color: var(--trans-10);
+}
+
+.custom-text-field:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--trans-25);
+}
+
+.custom-text-field.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: var(--oracle-red);
+}
+
+.custom-input-label {
+  color: var(--trans-70) !important;
+}
+
+.custom-select {
+  background-color: var(--trans-07);
+  color: var(--oracle-text);
+}
+
+.custom-select .MuiOutlinedInput-notchedOutline {
+  border-color: var(--trans-10);
+}
+
+.custom-select:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--trans-25);
+}
+
+.custom-select.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: var(--oracle-red);
+}
+
+@media (max-width: 480px) {
+  .form-selects {
+    flex-direction: column;
+    gap: var(--space-sm);
   }
+}
+
+/* Estilos mejorados para el selector de estado */
+.status-actions select {
+  background-color: var(--trans-15);
+  color: var(--oracle-text);
+  border: 1px solid var(--trans-25);
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-sm);
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+  padding-right: 30px;
+  transition: all 0.3s ease;
+}
+
+.status-actions select:focus {
+  outline: none;
+  border-color: var(--oracle-red);
+  box-shadow: 0 0 0 3px rgba(199, 70, 52, 0.25);
+}
+
+/* Añadir estilo para el botón de mover a siguiente estado */
+.modal-action-button.move-next {
+  background-color: var(--trans-25) !important;
+  color: white !important;
+  border: 1px solid var(--trans-40) !important;
+}
+
+.modal-action-button.move-next:hover {
+  background-color: var(--status-in-progress) !important;
 }

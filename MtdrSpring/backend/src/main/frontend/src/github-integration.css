@@ -130,3 +130,35 @@
       height: 2px;
     }
   }
+
+  /* Estilos para la integración de GitHub */
+.commit-sha {
+  font-family: monospace;
+  background-color: var(--trans-10);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  display: inline-block;
+}
+
+.github-link {
+  color: var(--oracle-text);
+  text-decoration: none;
+  background-color: var(--trans-15);
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.github-link:hover {
+  background-color: var(--oracle-red);
+  transform: translateY(-2px);
+}
+
+.dialog-help-text {
+  color: var(--trans-70);
+  font-size: 0.85rem;
+  margin-top: 16px;
+}
