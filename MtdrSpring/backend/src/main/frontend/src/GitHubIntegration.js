@@ -88,7 +88,11 @@ function GitHubIntegration({ todos }) {
       .replace(/\s+/g, '-')     // Reemplazar espacios con guiones
       .slice(0, 30);            // Limitar longitud
       
-    setBranchName(`task-${taskId}-${cleanDescription}`);
+    // Añadir timestamp para evitar duplicados
+    const timestamp = new Date().getTime().toString().slice(-6);
+    const uniqueBranchName = `task-${taskId}-${cleanDescription}-${timestamp}`;
+    
+    setBranchName(uniqueBranchName);
     setOpenCreateBranchDialog(true);
   };
   
@@ -98,15 +102,18 @@ function GitHubIntegration({ todos }) {
     setLoading(true);
     setError(null);
     
+    // Mostrar exactamente qué estamos enviando para depuración
+    console.log("Branch name being sent:", branchName);
+    
     const requestData = {
       owner: owner,
       repo: repo,
-      branch: branchName,
-      baseBranch: "main", // Especificar la branch base
+      newBranchName: branchName,  // Este es el campo que espera el backend
+      baseBranch: "main", 
       taskId: selectedTask.id
     };
     
-    // Debug info
+    // Debug info para verificar los datos de la solicitud
     setDebugInfo(`Creating branch: ${branchName}\nRequest data: ${JSON.stringify(requestData, null, 2)}`);
     console.log('Sending request to create branch:', requestData);
     console.log('Endpoint URL:', GITHUB_CREATE_BRANCH);
@@ -132,7 +139,7 @@ function GitHubIntegration({ todos }) {
       // Intentar parsear la respuesta como JSON si es posible
       let jsonResponse = null;
       try {
-        if (responseText) {
+        if (responseText && responseText.trim().startsWith('{')) {
           jsonResponse = JSON.parse(responseText);
           console.log('Parsed JSON response:', jsonResponse);
           setDebugInfo(prev => `${prev}\nParsed response: ${JSON.stringify(jsonResponse, null, 2)}`);
@@ -141,17 +148,57 @@ function GitHubIntegration({ todos }) {
         console.log('Response is not JSON:', responseText);
       }
       
-      if (!response.ok) {
+      // Manejar error 422 (branch ya existe) específicamente
+      if (response.status === 422 && jsonResponse?.message === "Reference already exists") {
+        // Crear un nuevo nombre con timestamp
+        const timestamp = new Date().getTime().toString().slice(-6);
+        const newBranchName = `${branchName}-${timestamp}`;
+        
+        setDebugInfo(prev => `${prev}\nBranch already exists. Retrying with: ${newBranchName}`);
+        
+        // Reintentar con el nuevo nombre
+        const retryData = {
+          ...requestData,
+          newBranchName: newBranchName  // Este es el campo que espera el backend
+        };
+        
+        const retryResponse = await fetch(GITHUB_CREATE_BRANCH, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(retryData)
+        });
+        
+        const retryText = await retryResponse.text();
+        setDebugInfo(prev => `${prev}\nRetry response: ${retryResponse.status} ${retryResponse.statusText}`);
+        setDebugInfo(prev => `${prev}\nRetry body: ${retryText}`);
+        
+        if (!retryResponse.ok) {
+          throw new Error(`Error creating branch on retry: ${retryResponse.status} - ${retryText}`);
+        }
+        
+        // Actualizar el nombre de la rama si el reintento fue exitoso
+        setBranchName(newBranchName);
+        
+        // Notificar éxito
+        setNotification({
+          open: true,
+          message: `Branch ${newBranchName} created successfully (after retry)!`,
+          severity: 'success'
+        });
+        
+      } else if (!response.ok) {
         const errorMessage = jsonResponse?.message || responseText || response.statusText;
         throw new Error(`Error creating branch: ${response.status} - ${errorMessage}`);
+      } else {
+        // Notificar éxito
+        setNotification({
+          open: true,
+          message: `Branch ${branchName} created successfully!`,
+          severity: 'success'
+        });
       }
-      
-      // Notificar éxito
-      setNotification({
-        open: true,
-        message: `Branch ${branchName} created successfully!`,
-        severity: 'success'
-      });
       
       // Refrescar la lista de ramas
       await fetchBranches();
@@ -193,7 +240,7 @@ function GitHubIntegration({ todos }) {
   };
   
   // Para mostrar/ocultar información de depuración
-  const [showDebug, setShowDebug] = useState(false);
+  const [showDebug, setShowDebug] = useState(true); // Activado por defecto para facilitar depuración
   
   // Renderizado de los componentes
   return (
@@ -337,19 +384,19 @@ function GitHubIntegration({ todos }) {
           />
           <p className="dialog-help-text">
             The branch will be created from the repository's main branch.
+            A timestamp has been added to the branch name to avoid conflicts.
           </p>
           
           {/* Mostrar información del endpoint para depuración */}
-          {showDebug && (
-            <div className="debug-endpoint-info">
-              <h4>Endpoint Information</h4>
-              <p>Create Branch URL: {GITHUB_CREATE_BRANCH}</p>
-              <p>Owner: {owner}</p>
-              <p>Repo: {repo}</p>
-              <p>Task ID: {selectedTask?.id}</p>
-              <p>Base Branch: main</p>
-            </div>
-          )}
+          <div className="debug-endpoint-info">
+            <h4>Branch Creation Information</h4>
+            <p>Owner: {owner}</p>
+            <p>Repo: {repo}</p>
+            <p>Base Branch: main</p>
+            <p>New Branch Name: {branchName}</p>
+            <p>Task ID: {selectedTask?.id}</p>
+            <p>Will be sent as: {"{"} owner: '{owner}', repo: '{repo}', newBranchName: '{branchName}', baseBranch: 'main', taskId: {selectedTask?.id} {"}"}</p>
+          </div>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenCreateBranchDialog(false)} className="DeleteButton">Cancel</Button>
