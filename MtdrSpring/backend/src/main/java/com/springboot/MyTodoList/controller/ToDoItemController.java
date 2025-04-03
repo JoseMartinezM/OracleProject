@@ -134,4 +134,60 @@ public class ToDoItemController {
     public List<ToDoItem> getToDoItemsByCreatedBy(@PathVariable Integer managerId) {
         return toDoItemService.findByCreatedBy(managerId);
     }
+    
+    // NUEVOS ENDPOINTS PARA SPRINT Y HORAS
+    
+    // Obtener tareas por Sprint ID
+    @GetMapping(value = "/todolist/sprint/{sprintId}")
+    public List<ToDoItem> getToDoItemsBySprintId(@PathVariable Integer sprintId) {
+        return toDoItemService.findBySprintId(sprintId);
+    }
+    
+    // Asignar una tarea a un sprint
+    @PatchMapping(value = "/todolist/{id}/sprint")
+    public ResponseEntity<ToDoItem> assignToSprint(@PathVariable int id, @RequestBody Map<String, Integer> sprintMap) {
+        try {
+            Integer sprintId = sprintMap.get("sprintId");
+            ToDoItem toDoItem = toDoItemService.assignToSprint(id, sprintId);
+            if (toDoItem != null) {
+                return new ResponseEntity<>(toDoItem, HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+    // Actualizar horas estimadas
+    @PatchMapping(value = "/todolist/{id}/estimated-hours")
+    public ResponseEntity<ToDoItem> updateEstimatedHours(@PathVariable int id, @RequestBody Map<String, Double> hoursMap) {
+        try {
+            Double hours = hoursMap.get("hours");
+            ToDoItem toDoItem = toDoItemService.updateEstimatedHours(id, hours);
+            if (toDoItem != null) {
+                return new ResponseEntity<>(toDoItem, HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+    // Actualizar horas reales trabajadas
+    @PatchMapping(value = "/todolist/{id}/actual-hours")
+    public ResponseEntity<ToDoItem> updateActualHours(@PathVariable int id, @RequestBody Map<String, Double> hoursMap) {
+        try {
+            Double hours = hoursMap.get("hours");
+            ToDoItem toDoItem = toDoItemService.updateActualHours(id, hours);
+            if (toDoItem != null) {
+                return new ResponseEntity<>(toDoItem, HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

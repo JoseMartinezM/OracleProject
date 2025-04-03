@@ -15,8 +15,10 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import com.springboot.MyTodoList.model.Sprint;
 import com.springboot.MyTodoList.model.ToDoItem;
 import com.springboot.MyTodoList.model.User;
+import com.springboot.MyTodoList.service.SprintService;
 import com.springboot.MyTodoList.service.ToDoItemService;
 import com.springboot.MyTodoList.service.UserService;
 import com.springboot.MyTodoList.util.BotCommands;
@@ -24,6 +26,7 @@ import com.springboot.MyTodoList.util.BotHelper;
 import com.springboot.MyTodoList.util.BotLabels;
 import com.springboot.MyTodoList.util.BotMessages;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,15 +39,30 @@ public class UserBotController extends TelegramLongPollingBot {
     private static final Logger logger = LoggerFactory.getLogger(UserBotController.class);
     private ToDoItemService toDoItemService;
     private UserService userService;
+    private SprintService sprintService;
     private String botName;
     private Map<Long, User> authorizedUsers = new HashMap<>();
+    
+    // Variables para manejo de estados de conversación
+    private Map<Long, String> chatState = new HashMap<>();
+    private Map<Long, Map<String, Object>> temporaryData = new HashMap<>();
+    
+    // Estados de conversación
+    private static final String STATE_NONE = "NONE";
+    private static final String STATE_ADDING_TASK = "ADDING_TASK";
+    private static final String STATE_ADDING_TASK_HOURS = "ADDING_TASK_HOURS";
+    private static final String STATE_ASSIGNING_TASK = "ASSIGNING_TASK";
+    private static final String STATE_SELECTING_SPRINT = "SELECTING_SPRINT";
+    private static final String STATE_COMPLETING_TASK = "COMPLETING_TASK";
+    private static final String STATE_COMPLETING_TASK_HOURS = "COMPLETING_TASK_HOURS";
 
-    public UserBotController(String botToken, String botName, ToDoItemService toDoItemService, UserService userService) {
+    public UserBotController(String botToken, String botName, ToDoItemService toDoItemService, UserService userService, SprintService sprintService) {
         super(botToken);
         logger.info("Bot Token: " + botToken);
         logger.info("Bot name: " + botName);
         this.toDoItemService = toDoItemService;
         this.userService = userService;
+        this.sprintService = sprintService;
         this.botName = botName;
     }
 
@@ -108,6 +126,10 @@ public class UserBotController extends TelegramLongPollingBot {
             User user = userResponse.getBody();
             // Guardar el usuario autorizado en memoria
             authorizedUsers.put(chatId, user);
+            
+            // Inicializar estado de la conversación
+            chatState.put(chatId, STATE_NONE);
+            temporaryData.put(chatId, new HashMap<>());
             
             logger.info("Usuario autorizado: " + user.getName() + " (ID: " + user.getID() + ")");
             
@@ -202,28 +224,50 @@ public class UserBotController extends TelegramLongPollingBot {
         messageToTelegram.setText(welcomeMessage);
 
         ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+        keyboardMarkup.setResizeKeyboard(true);
         List<KeyboardRow> keyboard = new ArrayList<>();
+
+        // Restablecer el estado
+        chatState.put(chatId, STATE_NONE);
+        temporaryData.put(chatId, new HashMap<>());
 
         // first row
         KeyboardRow row = new KeyboardRow();
         row.add(BotLabels.LIST_ALL_ITEMS.getLabel());
         row.add(BotLabels.ADD_NEW_ITEM.getLabel());
-        // Add the first row to the keyboard
         keyboard.add(row);
 
-        // second row
-        row = new KeyboardRow();
-        row.add(BotLabels.SHOW_MAIN_SCREEN.getLabel());
-        row.add(BotLabels.HIDE_MAIN_SCREEN.getLabel());
-        keyboard.add(row);
+        // Menú específico para Developer
+        if ("Developer".equals(user.getRole())) {
+            row = new KeyboardRow();
+            row.add("🆕 Agregar Tarea con Horas");
+            row.add("✅ Completar Tarea");
+            keyboard.add(row);
+            
+            row = new KeyboardRow();
+            row.add("👁️ Mis Tareas Asignadas");
+            row.add("📋 Ver Sprints");
+            keyboard.add(row);
+        }
 
         // Si el usuario es Manager, mostrar opciones adicionales
         if ("Manager".equals(user.getRole())) {
             row = new KeyboardRow();
-            row.add("Ver Desarrolladores");
-            row.add("Asignar Tarea");
+            row.add("👨‍💻 Ver Desarrolladores");
+            row.add("📝 Asignar Tarea a Sprint");
+            keyboard.add(row);
+            
+            row = new KeyboardRow();
+            row.add("⏱️ Ver Horas por Sprint");
+            row.add("📊 Resumen de Tareas");
             keyboard.add(row);
         }
+
+        // Última fila
+        row = new KeyboardRow();
+        row.add(BotLabels.SHOW_MAIN_SCREEN.getLabel());
+        row.add(BotLabels.HIDE_MAIN_SCREEN.getLabel());
+        keyboard.add(row);
 
         // Set the keyboard
         keyboardMarkup.setKeyboard(keyboard);
@@ -243,7 +287,34 @@ public class UserBotController extends TelegramLongPollingBot {
             String messageTextFromTelegram = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
             User currentUser = authorizedUsers.get(chatId);
+            
+            // Obtener el estado actual
+            String currentState = chatState.getOrDefault(chatId, STATE_NONE);
+            Map<String, Object> data = temporaryData.getOrDefault(chatId, new HashMap<>());
 
+            // Manejar estados de conversación
+            switch (currentState) {
+                case STATE_ADDING_TASK:
+                    handleAddingTaskState(chatId, messageTextFromTelegram, currentUser);
+                    return;
+                case STATE_ADDING_TASK_HOURS:
+                    handleAddingTaskHoursState(chatId, messageTextFromTelegram, currentUser, data);
+                    return;
+                case STATE_ASSIGNING_TASK:
+                    handleAssigningTaskState(chatId, messageTextFromTelegram, currentUser);
+                    return;
+                case STATE_SELECTING_SPRINT:
+                    handleSelectingSprintState(chatId, messageTextFromTelegram, currentUser, data);
+                    return;
+                case STATE_COMPLETING_TASK:
+                    handleCompletingTaskState(chatId, messageTextFromTelegram, currentUser);
+                    return;
+                case STATE_COMPLETING_TASK_HOURS:
+                    handleCompletingTaskHoursState(chatId, messageTextFromTelegram, currentUser, data);
+                    return;
+            }
+
+            // Procesar comandos y opciones del menú
             if (messageTextFromTelegram.equals(BotCommands.START_COMMAND.getCommand())
                     || messageTextFromTelegram.equals(BotLabels.SHOW_MAIN_SCREEN.getLabel())) {
                 
@@ -273,20 +344,828 @@ public class UserBotController extends TelegramLongPollingBot {
                     || messageTextFromTelegram.equals(BotLabels.ADD_NEW_ITEM.getLabel())) {
                 
                 requestNewTodoItem(chatId);
-
-            } else if (messageTextFromTelegram.equals("Ver Desarrolladores") && "Manager".equals(currentUser.getRole())) {
+                
+            } else if (messageTextFromTelegram.equals("🆕 Agregar Tarea con Horas") && "Developer".equals(currentUser.getRole())) {
+                startAddingTaskWithHours(chatId);
+                
+            } else if (messageTextFromTelegram.equals("✅ Completar Tarea") && "Developer".equals(currentUser.getRole())) {
+                startCompletingTask(chatId, currentUser);
+                
+            } else if (messageTextFromTelegram.equals("👁️ Mis Tareas Asignadas") && "Developer".equals(currentUser.getRole())) {
+                showAssignedTasks(chatId, currentUser);
+                
+            } else if (messageTextFromTelegram.equals("📋 Ver Sprints")) {
+                showAvailableSprints(chatId);
+                
+            } else if (messageTextFromTelegram.equals("👨‍💻 Ver Desarrolladores") && "Manager".equals(currentUser.getRole())) {
                 showDevelopers(chatId);
-
-            } else if (messageTextFromTelegram.equals("Asignar Tarea") && "Manager".equals(currentUser.getRole())) {
-                startTaskAssignment(chatId);
-
+                
+            } else if (messageTextFromTelegram.equals("📝 Asignar Tarea a Sprint") && "Manager".equals(currentUser.getRole())) {
+                startAssigningTaskToSprint(chatId);
+                
+            } else if (messageTextFromTelegram.equals("⏱️ Ver Horas por Sprint") && "Manager".equals(currentUser.getRole())) {
+                showHoursBySprintReport(chatId);
+                
+            } else if (messageTextFromTelegram.equals("📊 Resumen de Tareas") && "Manager".equals(currentUser.getRole())) {
+                showTasksSummary(chatId);
+                
             } else {
-                // Asumir que es un nuevo ítem de tarea
+                // Asumir que es un nuevo ítem de tarea (estado por defecto)
                 addNewTodoItem(messageTextFromTelegram, chatId, currentUser);
             }
         }
     }
+    
+    // NUEVA FUNCIONALIDAD: AGREGAR TAREA CON HORAS ESTIMADAS
+    private void startAddingTaskWithHours(long chatId) {
+        chatState.put(chatId, STATE_ADDING_TASK);
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId);
+        message.setText("Por favor, escribe la descripción de la tarea que deseas crear:");
+        
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            logger.error("Error starting task creation", e);
+        }
+    }
+    
+    private void handleAddingTaskState(long chatId, String messageText, User currentUser) {
+        // Guardar la descripción de la tarea
+        Map<String, Object> data = temporaryData.getOrDefault(chatId, new HashMap<>());
+        data.put("description", messageText);
+        temporaryData.put(chatId, data);
+        
+        // Cambiar al estado de pedir horas
+        chatState.put(chatId, STATE_ADDING_TASK_HOURS);
+        
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId);
+        message.setText("Ahora, por favor, ingresa las horas estimadas para esta tarea (un número, máximo 4 horas):");
+        
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            logger.error("Error requesting task hours", e);
+        }
+    }
+    
+    private void handleAddingTaskHoursState(long chatId, String messageText, User currentUser, Map<String, Object> data) {
+        try {
+            // Intentar convertir a número
+            double hours = Double.parseDouble(messageText);
+            String description = (String) data.get("description");
+            
+            if (hours <= 0) {
+                SendMessage errorMessage = new SendMessage();
+                errorMessage.setChatId(chatId);
+                errorMessage.setText("❌ El número de horas debe ser mayor que cero. Por favor, intenta nuevamente:");
+                execute(errorMessage);
+                return;
+            }
+            
+            // Si es mayor a 4 horas, subdividir
+            if (hours > 4.0) {
+                // Calcular cuántas subtareas se necesitan
+                int numberOfSubtasks = (int) Math.ceil(hours / 4.0);
+                double hoursPerSubtask = hours / numberOfSubtasks;
+                
+                StringBuilder resultMessage = new StringBuilder();
+                resultMessage.append("⚠️ La tarea excede las 4 horas permitidas. Se ha dividido en ").append(numberOfSubtasks).append(" subtareas:\n\n");
+                
+                for (int i = 1; i <= numberOfSubtasks; i++) {
+                    // Crear subtarea
+                    ToDoItem subTask = new ToDoItem();
+                    subTask.setDescription(description + " (Parte " + i + " de " + numberOfSubtasks + ")");
+                    subTask.setCreation_ts(OffsetDateTime.now());
+                    subTask.setDone(false);
+                    subTask.setCreatedBy(currentUser.getID());
+                    subTask.setAssignedTo(currentUser.getID());
+                    subTask.setEstimatedHours(hoursPerSubtask);
+                    subTask.setStatus("Pending");
+                    
+                    toDoItemService.addToDoItem(subTask);
+                    
+                    resultMessage.append("📌 ").append(subTask.getDescription()).append(" - ").append(String.format("%.2f", hoursPerSubtask)).append(" horas\n");
+                }
+                
+                // Mostrar mensaje de éxito
+                SendMessage successMessage = new SendMessage();
+                successMessage.setChatId(chatId);
+                successMessage.setText(resultMessage.toString());
+                execute(successMessage);
+                
+            } else {
+                // Crear una sola tarea si es <= 4 horas
+                ToDoItem newTask = new ToDoItem();
+                newTask.setDescription(description);
+                newTask.setCreation_ts(OffsetDateTime.now());
+                newTask.setDone(false);
+                newTask.setCreatedBy(currentUser.getID());
+                newTask.setAssignedTo(currentUser.getID());
+                newTask.setEstimatedHours(hours);
+                newTask.setStatus("Pending");
+                
+                toDoItemService.addToDoItem(newTask);
+                
+                // Mostrar mensaje de éxito
+                SendMessage successMessage = new SendMessage();
+                successMessage.setChatId(chatId);
+                successMessage.setText("✅ Tarea creada exitosamente:\n\n📌 " + description + "\n⏱️ Horas estimadas: " + hours);
+                execute(successMessage);
+            }
+            
+            // Restablecer estado
+            chatState.put(chatId, STATE_NONE);
+            temporaryData.put(chatId, new HashMap<>());
+            
+            // Mostrar menú principal
+            showMainMenu(chatId, currentUser);
+            
+        } catch (NumberFormatException e) {
+            // Manejar error de formato
+            SendMessage errorMessage = new SendMessage();
+            errorMessage.setChatId(chatId);
+            errorMessage.setText("❌ Por favor, ingresa un número válido para las horas:");
+            
+            try {
+                execute(errorMessage);
+            } catch (TelegramApiException ex) {
+                logger.error("Error sending error message", ex);
+            }
+        } catch (TelegramApiException e) {
+            logger.error("Error processing task creation", e);
+        }
+    }
+    
+    // NUEVA FUNCIONALIDAD: ASIGNAR TAREA A SPRINT
+    private void startAssigningTaskToSprint(long chatId) {
+        chatState.put(chatId, STATE_ASSIGNING_TASK);
+        
+        // Obtener tareas no asignadas a sprint
+        List<ToDoItem> unassignedTasks = toDoItemService.findAll().stream()
+                .filter(item -> item.getSprintId() == null && (item.getIsArchived() == null || item.getIsArchived() == 0))
+                .collect(Collectors.toList());
+        
+        if (unassignedTasks.isEmpty()) {
+            SendMessage message = new SendMessage();
+            message.setChatId(chatId);
+            message.setText("No hay tareas disponibles para asignar a sprints.");
+            
+            try {
+                execute(message);
+                chatState.put(chatId, STATE_NONE);
+                showMainMenu(chatId, authorizedUsers.get(chatId));
+            } catch (TelegramApiException e) {
+                logger.error("Error sending message", e);
+            }
+            return;
+        }
+        
+        StringBuilder tasksListMessage = new StringBuilder();
+        tasksListMessage.append("Selecciona la tarea que deseas asignar a un sprint ingresando su ID:\n\n");
+        
+        for (ToDoItem task : unassignedTasks) {
+            tasksListMessage.append("ID: ").append(task.getID()).append(" - ");
+            tasksListMessage.append(task.getDescription()).append("\n");
+            
+            User assignedUser = null;
+            if (task.getAssignedTo() != null) {
+                ResponseEntity<User> userResponse = userService.getUserById(task.getAssignedTo());
+                if (userResponse.getStatusCode() == HttpStatus.OK) {
+                    assignedUser = userResponse.getBody();
+                }
+            }
+            
+            tasksListMessage.append("   👨‍💻 Asignado a: ").append(assignedUser != null ? assignedUser.getName() : "Nadie").append("\n");
+            tasksListMessage.append("   ⏱️ Horas estimadas: ").append(task.getEstimatedHours() != null ? task.getEstimatedHours() : "No definidas").append("\n\n");
+        }
+        
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId);
+        message.setText(tasksListMessage.toString());
+        
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            logger.error("Error sending tasks list", e);
+        }
+    }
+    
+    private void handleAssigningTaskState(long chatId, String messageText, User currentUser) {
+        try {
+            // Intentar convertir a número para el ID de tarea
+            int taskId = Integer.parseInt(messageText);
+            
+            // Verificar si la tarea existe
+            ResponseEntity<ToDoItem> response = toDoItemService.getItemById(taskId);
+            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                ToDoItem task = response.getBody();
+                
+                // Verificar si ya está asignada a un sprint
+                if (task.getSprintId() != null) {
+                    SendMessage errorMessage = new SendMessage();
+                    errorMessage.setChatId(chatId);
+                    errorMessage.setText("❌ Esta tarea ya está asignada a un sprint. Por favor, selecciona otra tarea.");
+                    execute(errorMessage);
+                    chatState.put(chatId, STATE_NONE);
+                    showMainMenu(chatId, currentUser);
+                    return;
+                }
+                
+                // Guardar ID de tarea temporalmente
+                Map<String, Object> data = temporaryData.getOrDefault(chatId, new HashMap<>());
+                data.put("taskId", taskId);
+                temporaryData.put(chatId, data);
+                
+                // Cambiar al estado de selección de sprint
+                chatState.put(chatId, STATE_SELECTING_SPRINT);
+                
+                // Mostrar sprints disponibles
+                List<Sprint> availableSprints = sprintService.findAll();
+                if (availableSprints.isEmpty()) {
+                    SendMessage errorMessage = new SendMessage();
+                    errorMessage.setChatId(chatId);
+                    errorMessage.setText("❌ No hay sprints disponibles. Por favor, crea un sprint primero.");
+                    execute(errorMessage);
+                    chatState.put(chatId, STATE_NONE);
+                    showMainMenu(chatId, currentUser);
+                    return;
+                }
+                
+                StringBuilder sprintsListMessage = new StringBuilder();
+                sprintsListMessage.append("Selecciona el sprint al cual deseas asignar la tarea ingresando su ID:\n\n");
+                
+                for (Sprint sprint : availableSprints) {
+                    sprintsListMessage.append("ID: ").append(sprint.getId()).append(" - ");
+                    sprintsListMessage.append(sprint.getName()).append("\n");
+                    sprintsListMessage.append("   📅 Periodo: ").append(sprint.getStartDate()).append(" al ").append(sprint.getEndDate()).append("\n");
+                    sprintsListMessage.append("   🔄 Estado: ").append(sprint.getStatus()).append("\n\n");
+                }
+                
+                SendMessage message = new SendMessage();
+                message.setChatId(chatId);
+                message.setText(sprintsListMessage.toString());
+                execute(message);
+                
+            } else {
+                SendMessage errorMessage = new SendMessage();
+                errorMessage.setChatId(chatId);
+                errorMessage.setText("❌ No se encontró ninguna tarea con ese ID. Por favor, intenta nuevamente.");
+                execute(errorMessage);
+                startAssigningTaskToSprint(chatId);
+            }
+            
+        } catch (NumberFormatException e) {
+            // Manejar error de formato
+            SendMessage errorMessage = new SendMessage();
+            errorMessage.setChatId(chatId);
+            errorMessage.setText("❌ Por favor, ingresa un número válido para el ID de la tarea.");
+            
+            try {
+                execute(errorMessage);
+                startAssigningTaskToSprint(chatId);
+            } catch (TelegramApiException ex) {
+                logger.error("Error sending error message", ex);
+            }
+        } catch (TelegramApiException e) {
+            logger.error("Error processing task assignment", e);
+        }
+    }
+    
+    private void handleSelectingSprintState(long chatId, String messageText, User currentUser, Map<String, Object> data) {
+        try {
+            // Intentar convertir a número para el ID del sprint
+            int sprintId = Integer.parseInt(messageText);
+            int taskId = (int) data.get("taskId");
+            
+            // Verificar si el sprint existe
+            ResponseEntity<Sprint> sprintResponse = sprintService.getSprintById(sprintId);
+            if (sprintResponse.getStatusCode() == HttpStatus.OK && sprintResponse.getBody() != null) {
+                Sprint sprint = sprintResponse.getBody();
+                
+                // Asignar la tarea al sprint
+                ToDoItem task = toDoItemService.assignToSprint(taskId, sprintId);
+                
+                if (task != null) {
+                    // Actualizar estado a "In Progress"
+                    task.setStatus("In Progress");
+                    toDoItemService.updateToDoItem(taskId, task);
+                    
+                    SendMessage successMessage = new SendMessage();
+                    successMessage.setChatId(chatId);
+                    successMessage.setText("✅ Tarea asignada exitosamente al sprint \"" + sprint.getName() + "\" y marcada como 'En Progreso'.");
+                    execute(successMessage);
+                } else {
+                    SendMessage errorMessage = new SendMessage();
+                    errorMessage.setChatId(chatId);
+                    errorMessage.setText("❌ No se pudo asignar la tarea al sprint. Verifica que tanto la tarea como el sprint sean válidos.");
+                    execute(errorMessage);
+                }
+            } else {
+                SendMessage errorMessage = new SendMessage();
+                errorMessage.setChatId(chatId);
+                errorMessage.setText("❌ No se encontró ningún sprint con ese ID. Por favor, intenta nuevamente.");
+                execute(errorMessage);
+                
+                // Volver a mostrar los sprints
+                List<Sprint> availableSprints = sprintService.findAll();
+                StringBuilder sprintsListMessage = new StringBuilder();
+                sprintsListMessage.append("Selecciona el sprint al cual deseas asignar la tarea ingresando su ID:\n\n");
+                
+                for (Sprint sprint : availableSprints) {
+                    sprintsListMessage.append("ID: ").append(sprint.getId()).append(" - ");
+                    sprintsListMessage.append(sprint.getName()).append("\n");
+                    sprintsListMessage.append("   📅 Periodo: ").append(sprint.getStartDate()).append(" al ").append(sprint.getEndDate()).append("\n");
+                    sprintsListMessage.append("   🔄 Estado: ").append(sprint.getStatus()).append("\n\n");
+                }
+                
+                SendMessage message = new SendMessage();
+                message.setChatId(chatId);
+                message.setText(sprintsListMessage.toString());
+                execute(message);
+                return;
+            }
+            
+            // Restablecer estado
+            chatState.put(chatId, STATE_NONE);
+            temporaryData.put(chatId, new HashMap<>());
+            
+            // Mostrar menú principal
+            showMainMenu(chatId, currentUser);
+            
+        } catch (NumberFormatException e) {
+            // Manejar error de formato
+            SendMessage errorMessage = new SendMessage();
+            errorMessage.setChatId(chatId);
+            errorMessage.setText("❌ Por favor, ingresa un número válido para el ID del sprint.");
+            
+            try {
+                execute(errorMessage);
+            } catch (TelegramApiException ex) {
+                logger.error("Error sending error message", ex);
+            }
+        } catch (TelegramApiException e) {
+            logger.error("Error processing sprint assignment", e);
+        }
+    }
+    
+    // NUEVA FUNCIONALIDAD: COMPLETAR TAREA
+    private void startCompletingTask(long chatId, User currentUser) {
+        chatState.put(chatId, STATE_COMPLETING_TASK);
+        
+        // Obtener tareas asignadas al usuario y en estado "In Progress"
+        List<ToDoItem> inProgressTasks = toDoItemService.findByAssignedTo(currentUser.getID()).stream()
+                .filter(item -> "In Progress".equals(item.getStatus()) && (item.getIsArchived() == null || item.getIsArchived() == 0))
+                .collect(Collectors.toList());
+        
+        if (inProgressTasks.isEmpty()) {
+            SendMessage message = new SendMessage();
+            message.setChatId(chatId);
+            message.setText("No tienes tareas en progreso para completar.");
+            
+            try {
+                execute(message);
+                chatState.put(chatId, STATE_NONE);
+                showMainMenu(chatId, currentUser);
+            } catch (TelegramApiException e) {
+                logger.error("Error sending message", e);
+            }
+            return;
+        }
+        
+        StringBuilder tasksListMessage = new StringBuilder();
+        tasksListMessage.append("Selecciona la tarea que has completado ingresando su ID:\n\n");
+        
+        for (ToDoItem task : inProgressTasks) {
+            tasksListMessage.append("ID: ").append(task.getID()).append(" - ");
+            tasksListMessage.append(task.getDescription()).append("\n");
+            
+            // Obtener información del sprint si existe
+            if (task.getSprintId() != null) {
+                ResponseEntity<Sprint> sprintResponse = sprintService.getSprintById(task.getSprintId());
+                if (sprintResponse.getStatusCode() == HttpStatus.OK && sprintResponse.getBody() != null) {
+                    tasksListMessage.append("   📋 Sprint: ").append(sprintResponse.getBody().getName()).append("\n");
+                }
+            }
+            
+            tasksListMessage.append("   ⏱️ Horas estimadas: ").append(task.getEstimatedHours() != null ? task.getEstimatedHours() : "No definidas").append("\n\n");
+        }
+        
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId);
+        message.setText(tasksListMessage.toString());
+        
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            logger.error("Error sending tasks list", e);
+        }
+    }
+    
+    private void handleCompletingTaskState(long chatId, String messageText, User currentUser) {
+        try {
+            // Intentar convertir a número para el ID de tarea
+            int taskId = Integer.parseInt(messageText);
+            
+            // Verificar si la tarea existe y pertenece al usuario
+            ResponseEntity<ToDoItem> response = toDoItemService.getItemById(taskId);
+            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                ToDoItem task = response.getBody();
+                
+                // Verificar si está asignada al usuario actual
+                if (task.getAssignedTo() == null || !task.getAssignedTo().equals(currentUser.getID())) {
+                    SendMessage errorMessage = new SendMessage();
+                    errorMessage.setChatId(chatId);
+                    errorMessage.setText("❌ Esta tarea no está asignada a ti. Por favor, selecciona una de tus tareas.");
+                    execute(errorMessage);
+                    startCompletingTask(chatId, currentUser);
+                    return;
+                }
+                
+                // Verificar si está en progreso
+                if (!"In Progress".equals(task.getStatus())) {
+                    SendMessage errorMessage = new SendMessage();
+                    errorMessage.setChatId(chatId);
+                    errorMessage.setText("❌ Esta tarea no está en estado 'En Progreso'. Solo puedes completar tareas que estén en progreso.");
+                    execute(errorMessage);
+                    startCompletingTask(chatId, currentUser);
+                    return;
+                }
+                
+                // Guardar ID de tarea temporalmente
+                Map<String, Object> data = temporaryData.getOrDefault(chatId, new HashMap<>());
+                data.put("taskId", taskId);
+                temporaryData.put(chatId, data);
+                
+                // Cambiar al estado de ingresar horas reales
+                chatState.put(chatId, STATE_COMPLETING_TASK_HOURS);
+                
+                SendMessage hoursMessage = new SendMessage();
+                hoursMessage.setChatId(chatId);
+                hoursMessage.setText("Por favor, ingresa las horas reales que trabajaste en esta tarea:");
+                execute(hoursMessage);
+                
+            } else {
+                SendMessage errorMessage = new SendMessage();
+                errorMessage.setChatId(chatId);
+                errorMessage.setText("❌ No se encontró ninguna tarea con ese ID. Por favor, intenta nuevamente.");
+                execute(errorMessage);
+                startCompletingTask(chatId, currentUser);
+            }
+            
+        } catch (NumberFormatException e) {
+            // Manejar error de formato
+            SendMessage errorMessage = new SendMessage();
+            errorMessage.setChatId(chatId);
+            errorMessage.setText("❌ Por favor, ingresa un número válido para el ID de la tarea.");
+            
+            try {
+                execute(errorMessage);
+                startCompletingTask(chatId, currentUser);
+            } catch (TelegramApiException ex) {
+                logger.error("Error sending error message", ex);
+            }
+        } catch (TelegramApiException e) {
+            logger.error("Error processing task completion", e);
+        }
+    }
+    
+    private void handleCompletingTaskHoursState(long chatId, String messageText, User currentUser, Map<String, Object> data) {
+        try {
+            // Intentar convertir a número para las horas
+            double hours = Double.parseDouble(messageText);
+            int taskId = (int) data.get("taskId");
+            
+            if (hours <= 0) {
+                SendMessage errorMessage = new SendMessage();
+                errorMessage.setChatId(chatId);
+                errorMessage.setText("❌ El número de horas debe ser mayor que cero. Por favor, intenta nuevamente:");
+                execute(errorMessage);
+                return;
+            }
+            
+            // Actualizar la tarea
+            ResponseEntity<ToDoItem> response = toDoItemService.getItemById(taskId);
+            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                ToDoItem task = response.getBody();
+                
+                // Actualizar horas reales
+                task.setActualHours(hours);
+                
+                // Marcar como completada
+                task.setStatus("Completed");
+                task.setDone(true);
+                
+                // Guardar cambios
+                toDoItemService.updateToDoItem(taskId, task);
+                
+                // Mensaje de éxito
+                StringBuilder successMessage = new StringBuilder();
+                successMessage.append("✅ Tarea completada exitosamente:\n\n");
+                successMessage.append("📌 ").append(task.getDescription()).append("\n");
+                successMessage.append("⏱️ Horas estimadas: ").append(task.getEstimatedHours() != null ? task.getEstimatedHours() : "No definidas").append("\n");
+                successMessage.append("⏱️ Horas reales: ").append(hours).append("\n");
+                
+                // Calcular diferencia de horas si hay estimación
+                if (task.getEstimatedHours() != null) {
+                    double diff = hours - task.getEstimatedHours();
+                    if (Math.abs(diff) < 0.01) {
+                        successMessage.append("🎯 Completada exactamente en el tiempo estimado.\n");
+                    } else if (diff > 0) {
+                        successMessage.append("⚠️ Excedió el tiempo estimado por ").append(String.format("%.2f", diff)).append(" horas.\n");
+                    } else {
+                        successMessage.append("👍 Completada ").append(String.format("%.2f", Math.abs(diff))).append(" horas antes de lo estimado.\n");
+                    }
+                }
+                
+                SendMessage message = new SendMessage();
+                message.setChatId(chatId);
+                message.setText(successMessage.toString());
+                execute(message);
+            }
+            
+            // Restablecer estado
+            chatState.put(chatId, STATE_NONE);
+            temporaryData.put(chatId, new HashMap<>());
+            
+            // Mostrar menú principal
+            showMainMenu(chatId, currentUser);
+            
+        } catch (NumberFormatException e) {
+            // Manejar error de formato
+            SendMessage errorMessage = new SendMessage();
+            errorMessage.setChatId(chatId);
+            errorMessage.setText("❌ Por favor, ingresa un número válido para las horas.");
+            
+            try {
+                execute(errorMessage);
+            } catch (TelegramApiException ex) {
+                logger.error("Error sending error message", ex);
+            }
+        } catch (TelegramApiException e) {
+            logger.error("Error processing hours input", e);
+        }
+    }
+    
+    // Métodos auxiliares para ver información adicional
+    private void showAssignedTasks(long chatId, User currentUser) {
+        List<ToDoItem> assignedTasks = toDoItemService.findByAssignedTo(currentUser.getID()).stream()
+                .filter(item -> (item.getIsArchived() == null || item.getIsArchived() == 0))
+                .collect(Collectors.toList());
+        
+        if (assignedTasks.isEmpty()) {
+            SendMessage message = new SendMessage();
+            message.setChatId(chatId);
+            message.setText("No tienes tareas asignadas actualmente.");
+            
+            try {
+                execute(message);
+                showMainMenu(chatId, currentUser);
+            } catch (TelegramApiException e) {
+                logger.error("Error sending message", e);
+            }
+            return;
+        }
+        
+        StringBuilder tasksListMessage = new StringBuilder();
+        tasksListMessage.append("📋 TAREAS ASIGNADAS A TI:\n\n");
+        
+        // Agrupar por estado
+        Map<String, List<ToDoItem>> tasksByStatus = assignedTasks.stream()
+                .collect(Collectors.groupingBy(ToDoItem::getStatus));
+        
+        for (String status : new String[]{"Pending", "In Progress", "In Review", "Completed"}) {
+            List<ToDoItem> tasks = tasksByStatus.getOrDefault(status, new ArrayList<>());
+            if (!tasks.isEmpty()) {
+                tasksListMessage.append("🔹 ").append(status.toUpperCase()).append(" (").append(tasks.size()).append(")\n\n");
+                
+                for (ToDoItem task : tasks) {
+                    tasksListMessage.append("ID: ").append(task.getID()).append(" - ");
+                    tasksListMessage.append(task.getDescription()).append("\n");
+                    
+                    // Mostrar sprint si existe
+                    if (task.getSprintId() != null) {
+                        ResponseEntity<Sprint> sprintResponse = sprintService.getSprintById(task.getSprintId());
+                        if (sprintResponse.getStatusCode() == HttpStatus.OK && sprintResponse.getBody() != null) {
+                            tasksListMessage.append("   📋 Sprint: ").append(sprintResponse.getBody().getName()).append("\n");
+                        }
+                    }
+                    
+                    tasksListMessage.append("   ⏱️ Horas estimadas: ").append(task.getEstimatedHours() != null ? task.getEstimatedHours() : "No definidas").append("\n");
+                    if (task.getActualHours() != null) {
+                        tasksListMessage.append("   ⏱️ Horas reales: ").append(task.getActualHours()).append("\n");
+                    }
+                    tasksListMessage.append("\n");
+                }
+            }
+        }
+        
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId);
+        message.setText(tasksListMessage.toString());
+        
+        try {
+            execute(message);
+            showMainMenu(chatId, currentUser);
+        } catch (TelegramApiException e) {
+            logger.error("Error sending assigned tasks", e);
+        }
+    }
+    
+    private void showAvailableSprints(long chatId) {
+        List<Sprint> sprints = sprintService.findAll();
+        
+        if (sprints.isEmpty()) {
+            SendMessage message = new SendMessage();
+            message.setChatId(chatId);
+            message.setText("No hay sprints disponibles en el sistema.");
+            
+            try {
+                execute(message);
+                showMainMenu(chatId, authorizedUsers.get(chatId));
+            } catch (TelegramApiException e) {
+                logger.error("Error sending message", e);
+            }
+            return;
+        }
+        
+        StringBuilder sprintsListMessage = new StringBuilder();
+        sprintsListMessage.append("📋 SPRINTS DISPONIBLES:\n\n");
+        
+        for (Sprint sprint : sprints) {
+            sprintsListMessage.append("ID: ").append(sprint.getId()).append(" - ");
+            sprintsListMessage.append(sprint.getName()).append("\n");
+            sprintsListMessage.append("   📅 Periodo: ").append(sprint.getStartDate()).append(" al ").append(sprint.getEndDate()).append("\n");
+            sprintsListMessage.append("   🔄 Estado: ").append(sprint.getStatus()).append("\n");
+            
+            // Contar tareas en este sprint
+            List<ToDoItem> sprintTasks = toDoItemService.findBySprintId(sprint.getId());
+            
+            // Contar por estado
+            long pendingCount = sprintTasks.stream().filter(t -> "Pending".equals(t.getStatus())).count();
+            long inProgressCount = sprintTasks.stream().filter(t -> "In Progress".equals(t.getStatus())).count();
+            long completedCount = sprintTasks.stream().filter(t -> "Completed".equals(t.getStatus())).count();
+            
+            sprintsListMessage.append("   📊 Tareas: ").append(sprintTasks.size())
+                .append(" (⏳ ").append(pendingCount)
+                .append(" | 🔄 ").append(inProgressCount)
+                .append(" | ✅ ").append(completedCount).append(")\n\n");
+        }
+        
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId);
+        message.setText(sprintsListMessage.toString());
+        
+        try {
+            execute(message);
+            showMainMenu(chatId, authorizedUsers.get(chatId));
+        } catch (TelegramApiException e) {
+            logger.error("Error sending sprints list", e);
+        }
+    }
+    
+    private void showHoursBySprintReport(long chatId) {
+        List<Sprint> sprints = sprintService.findAll();
+        
+        if (sprints.isEmpty()) {
+            SendMessage message = new SendMessage();
+            message.setChatId(chatId);
+            message.setText("No hay sprints disponibles para generar el reporte.");
+            
+            try {
+                execute(message);
+                showMainMenu(chatId, authorizedUsers.get(chatId));
+            } catch (TelegramApiException e) {
+                logger.error("Error sending message", e);
+            }
+            return;
+        }
+        
+        StringBuilder reportMessage = new StringBuilder();
+        reportMessage.append("📊 REPORTE DE HORAS POR SPRINT:\n\n");
+        
+        for (Sprint sprint : sprints) {
+            reportMessage.append("🔸 ").append(sprint.getName()).append("\n");
+            
+            List<ToDoItem> sprintTasks = toDoItemService.findBySprintId(sprint.getId());
+            
+            double totalEstimated = sprintTasks.stream()
+                    .filter(t -> t.getEstimatedHours() != null)
+                    .mapToDouble(ToDoItem::getEstimatedHours)
+                    .sum();
+                    
+            double totalActual = sprintTasks.stream()
+                    .filter(t -> t.getActualHours() != null)
+                    .mapToDouble(ToDoItem::getActualHours)
+                    .sum();
+                    
+            double totalPending = sprintTasks.stream()
+                    .filter(t -> !"Completed".equals(t.getStatus()) && t.getEstimatedHours() != null)
+                    .mapToDouble(ToDoItem::getEstimatedHours)
+                    .sum();
+                    
+            reportMessage.append("   ⏱️ Total horas estimadas: ").append(String.format("%.2f", totalEstimated)).append("\n");
+            reportMessage.append("   ⏱️ Total horas trabajadas: ").append(String.format("%.2f", totalActual)).append("\n");
+            reportMessage.append("   ⏳ Horas pendientes estimadas: ").append(String.format("%.2f", totalPending)).append("\n");
+            
+            // Calcular eficiencia en tareas completadas
+            long completedTasksCount = sprintTasks.stream()
+                    .filter(t -> "Completed".equals(t.getStatus()) && t.getEstimatedHours() != null && t.getActualHours() != null)
+                    .count();
+                    
+            if (completedTasksCount > 0) {
+                double estimatedCompleted = sprintTasks.stream()
+                        .filter(t -> "Completed".equals(t.getStatus()) && t.getEstimatedHours() != null)
+                        .mapToDouble(ToDoItem::getEstimatedHours)
+                        .sum();
+                        
+                double actualCompleted = sprintTasks.stream()
+                        .filter(t -> "Completed".equals(t.getStatus()) && t.getActualHours() != null)
+                        .mapToDouble(ToDoItem::getActualHours)
+                        .sum();
+                        
+                double efficiency = (estimatedCompleted / actualCompleted) * 100;
+                reportMessage.append("   📈 Eficiencia: ").append(String.format("%.2f", efficiency)).append("%\n");
+            }
+            
+            reportMessage.append("\n");
+        }
+        
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId);
+        message.setText(reportMessage.toString());
+        
+        try {
+            execute(message);
+            showMainMenu(chatId, authorizedUsers.get(chatId));
+        } catch (TelegramApiException e) {
+            logger.error("Error sending hours report", e);
+        }
+    }
+    
+    private void showTasksSummary(long chatId) {
+        // Obtener todas las tareas
+        List<ToDoItem> allTasks = toDoItemService.findAll();
+        
+        StringBuilder summaryMessage = new StringBuilder();
+        summaryMessage.append("📊 RESUMEN DE TAREAS:\n\n");
+        
+        // Contar tareas por estado
+        long pendingCount = allTasks.stream().filter(t -> "Pending".equals(t.getStatus())).count();
+        long inProgressCount = allTasks.stream().filter(t -> "In Progress".equals(t.getStatus())).count();
+        long inReviewCount = allTasks.stream().filter(t -> "In Review".equals(t.getStatus())).count();
+        long completedCount = allTasks.stream().filter(t -> "Completed".equals(t.getStatus())).count();
+        
+        summaryMessage.append("🔹 Total de tareas: ").append(allTasks.size()).append("\n");
+        summaryMessage.append("   ⏳ Pendientes: ").append(pendingCount).append("\n");
+        summaryMessage.append("   🔄 En progreso: ").append(inProgressCount).append("\n");
+        summaryMessage.append("   👁️ En revisión: ").append(inReviewCount).append("\n");
+        summaryMessage.append("   ✅ Completadas: ").append(completedCount).append("\n\n");
+        
+        // Obtener tareas sin asignar
+        long unassignedCount = allTasks.stream().filter(t -> t.getAssignedTo() == null).count();
+        summaryMessage.append("🔹 Tareas sin asignar: ").append(unassignedCount).append("\n\n");
+        
+        // Obtener tareas sin sprint
+        long withoutSprintCount = allTasks.stream().filter(t -> t.getSprintId() == null).count();
+        summaryMessage.append("🔹 Tareas sin sprint: ").append(withoutSprintCount).append("\n\n");
+        
+        // Obtener tareas con horas estimadas pero sin horas reales (incompletas)
+        long estimatedButNotCompletedCount = allTasks.stream()
+                .filter(t -> t.getEstimatedHours() != null && t.getActualHours() == null)
+                .count();
+        summaryMessage.append("🔹 Tareas estimadas pero no completadas: ").append(estimatedButNotCompletedCount).append("\n\n");
+        
+        // Obtener desarrolladores con tareas asignadas
+        Map<Integer, Long> taskCountByDeveloper = allTasks.stream()
+                .filter(t -> t.getAssignedTo() != null)
+                .collect(Collectors.groupingBy(ToDoItem::getAssignedTo, Collectors.counting()));
+                
+        summaryMessage.append("🔹 Tareas por desarrollador:\n\n");
+        
+        for (Map.Entry<Integer, Long> entry : taskCountByDeveloper.entrySet()) {
+            ResponseEntity<User> userResponse = userService.getUserById(entry.getKey());
+            if (userResponse.getStatusCode() == HttpStatus.OK && userResponse.getBody() != null) {
+                User developer = userResponse.getBody();
+                summaryMessage.append("   👨‍💻 ").append(developer.getName())
+                        .append(": ").append(entry.getValue()).append(" tareas\n");
+            }
+        }
+        
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId);
+        message.setText(summaryMessage.toString());
+        
+        try {
+            execute(message);
+            showMainMenu(chatId, authorizedUsers.get(chatId));
+        } catch (TelegramApiException e) {
+            logger.error("Error sending tasks summary", e);
+        }
+    }
 
+    // Métodos originales existentes
     private void processDoneCommand(String messageText, long chatId) {
         String done = messageText.substring(0, messageText.indexOf(BotLabels.DASH.getLabel()));
         Integer id = Integer.valueOf(done);
@@ -296,6 +1175,7 @@ public class UserBotController extends TelegramLongPollingBot {
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 ToDoItem item = response.getBody();
                 item.setDone(true);
+                item.setStatus("Completed"); // Actualizar también el estado
                 toDoItemService.updateToDoItem(id, item);
                 BotHelper.sendMessageToTelegram(chatId, BotMessages.ITEM_DONE.getMessage(), this);
             }
@@ -313,6 +1193,7 @@ public class UserBotController extends TelegramLongPollingBot {
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 ToDoItem item = response.getBody();
                 item.setDone(false);
+                item.setStatus("Pending"); // Restablecer el estado
                 toDoItemService.updateToDoItem(id, item);
                 BotHelper.sendMessageToTelegram(chatId, BotMessages.ITEM_UNDONE.getMessage(), this);
             }
@@ -345,6 +1226,7 @@ public class UserBotController extends TelegramLongPollingBot {
         }
         
         ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+        keyboardMarkup.setResizeKeyboard(true);
         List<KeyboardRow> keyboard = new ArrayList<>();
 
         // command back to main screen
@@ -373,103 +1255,103 @@ public class UserBotController extends TelegramLongPollingBot {
         List<ToDoItem> doneItems = allItems.stream().filter(item -> item.isDone() == true)
                 .collect(Collectors.toList());
 
-        for (ToDoItem item : doneItems) {
-            KeyboardRow currentRow = new KeyboardRow();
-            currentRow.add(item.getDescription());
-            currentRow.add(item.getID() + BotLabels.DASH.getLabel() + BotLabels.UNDO.getLabel());
-            currentRow.add(item.getID() + BotLabels.DASH.getLabel() + BotLabels.DELETE.getLabel());
-            keyboard.add(currentRow);
-        }
-
-        // command back to main screen
-        KeyboardRow mainScreenRowBottom = new KeyboardRow();
-        mainScreenRowBottom.add(BotLabels.SHOW_MAIN_SCREEN.getLabel());
-        keyboard.add(mainScreenRowBottom);
-
-        keyboardMarkup.setKeyboard(keyboard);
-
-        SendMessage messageToTelegram = new SendMessage();
-        messageToTelegram.setChatId(chatId);
-        messageToTelegram.setText(BotLabels.MY_TODO_LIST.getLabel());
-        messageToTelegram.setReplyMarkup(keyboardMarkup);
-
-        try {
-            execute(messageToTelegram);
-        } catch (TelegramApiException e) {
-            logger.error(e.getLocalizedMessage(), e);
-        }
-    }
-
-    private void requestNewTodoItem(long chatId) {
-        try {
-            SendMessage messageToTelegram = new SendMessage();
-            messageToTelegram.setChatId(chatId);
-            messageToTelegram.setText(BotMessages.TYPE_NEW_TODO_ITEM.getMessage());
-            // hide keyboard
-            ReplyKeyboardRemove keyboardMarkup = new ReplyKeyboardRemove(true);
-            messageToTelegram.setReplyMarkup(keyboardMarkup);
-
-            // send message
-            execute(messageToTelegram);
-        } catch (Exception e) {
-            logger.error(e.getLocalizedMessage(), e);
-        }
-    }
-
-    private void addNewTodoItem(String description, long chatId, User currentUser) {
-        try {
-            ToDoItem newItem = new ToDoItem();
-            newItem.setDescription(description);
-            newItem.setCreation_ts(OffsetDateTime.now());
-            newItem.setDone(false);
-            newItem.setCreatedBy(currentUser.getID());
-            
-            // Si es un developer, autoasignarse la tarea
-            if ("Developer".equals(currentUser.getRole())) {
-                newItem.setAssignedTo(currentUser.getID());
+                for (ToDoItem item : doneItems) {
+                    KeyboardRow currentRow = new KeyboardRow();
+                    currentRow.add(item.getDescription());
+                    currentRow.add(item.getID() + BotLabels.DASH.getLabel() + BotLabels.UNDO.getLabel());
+                    currentRow.add(item.getID() + BotLabels.DASH.getLabel() + BotLabels.DELETE.getLabel());
+                    keyboard.add(currentRow);
+                }
+        
+                // command back to main screen
+                KeyboardRow mainScreenRowBottom = new KeyboardRow();
+                mainScreenRowBottom.add(BotLabels.SHOW_MAIN_SCREEN.getLabel());
+                keyboard.add(mainScreenRowBottom);
+        
+                keyboardMarkup.setKeyboard(keyboard);
+        
+                SendMessage messageToTelegram = new SendMessage();
+                messageToTelegram.setChatId(chatId);
+                messageToTelegram.setText(BotLabels.MY_TODO_LIST.getLabel());
+                messageToTelegram.setReplyMarkup(keyboardMarkup);
+        
+                try {
+                    execute(messageToTelegram);
+                } catch (TelegramApiException e) {
+                    logger.error(e.getLocalizedMessage(), e);
+                }
             }
-            
-            toDoItemService.addToDoItem(newItem);
-
-            SendMessage messageToTelegram = new SendMessage();
-            messageToTelegram.setChatId(chatId);
-            messageToTelegram.setText(BotMessages.NEW_ITEM_ADDED.getMessage());
-
-            execute(messageToTelegram);
-        } catch (Exception e) {
-            logger.error(e.getLocalizedMessage(), e);
-        }
-    }
-
-    private void showDevelopers(long chatId) {
-        List<User> developers = userService.findByRole("Developer");
         
-        StringBuilder message = new StringBuilder("Desarrolladores disponibles:\n\n");
-        for (User dev : developers) {
-            message.append("ID: ").append(dev.getID()).append(" - ");
-            message.append("Nombre: ").append(dev.getName()).append(" - ");
-            message.append("Username: ").append(dev.getUsername()).append("\n");
-        }
+            private void requestNewTodoItem(long chatId) {
+                try {
+                    SendMessage messageToTelegram = new SendMessage();
+                    messageToTelegram.setChatId(chatId);
+                    messageToTelegram.setText(BotMessages.TYPE_NEW_TODO_ITEM.getMessage());
+                    // hide keyboard
+                    ReplyKeyboardRemove keyboardMarkup = new ReplyKeyboardRemove(true);
+                    messageToTelegram.setReplyMarkup(keyboardMarkup);
         
-        SendMessage messageToTelegram = new SendMessage();
-        messageToTelegram.setChatId(chatId);
-        messageToTelegram.setText(message.toString());
+                    // send message
+                    execute(messageToTelegram);
+                } catch (Exception e) {
+                    logger.error(e.getLocalizedMessage(), e);
+                }
+            }
         
-        try {
-            execute(messageToTelegram);
-            BotHelper.sendMessageToTelegram(chatId, "Selecciona una opción:", this);
-            showMainMenu(chatId, authorizedUsers.get(chatId));
-        } catch (TelegramApiException e) {
-            logger.error("Error showing developers", e);
+            private void addNewTodoItem(String description, long chatId, User currentUser) {
+                try {
+                    ToDoItem newItem = new ToDoItem();
+                    newItem.setDescription(description);
+                    newItem.setCreation_ts(OffsetDateTime.now());
+                    newItem.setDone(false);
+                    newItem.setCreatedBy(currentUser.getID());
+                    newItem.setStatus("Pending");
+                    
+                    // Si es un developer, autoasignarse la tarea
+                    if ("Developer".equals(currentUser.getRole())) {
+                        newItem.setAssignedTo(currentUser.getID());
+                    }
+                    
+                    toDoItemService.addToDoItem(newItem);
+        
+                    SendMessage messageToTelegram = new SendMessage();
+                    messageToTelegram.setChatId(chatId);
+                    messageToTelegram.setText(BotMessages.NEW_ITEM_ADDED.getMessage());
+        
+                    execute(messageToTelegram);
+                    
+                    // Mostrar el menú principal después de agregar la tarea
+                    showMainMenu(chatId, currentUser);
+                } catch (Exception e) {
+                    logger.error(e.getLocalizedMessage(), e);
+                }
+            }
+        
+            private void showDevelopers(long chatId) {
+                List<User> developers = userService.findByRole("Developer");
+                
+                StringBuilder message = new StringBuilder("Desarrolladores disponibles:\n\n");
+                for (User dev : developers) {
+                    message.append("ID: ").append(dev.getID()).append(" - ");
+                    message.append("Nombre: ").append(dev.getName()).append(" - ");
+                    message.append("Username: ").append(dev.getUsername()).append("\n");
+                }
+                
+                SendMessage messageToTelegram = new SendMessage();
+                messageToTelegram.setChatId(chatId);
+                messageToTelegram.setText(message.toString());
+                
+                try {
+                    execute(messageToTelegram);
+                    BotHelper.sendMessageToTelegram(chatId, "Selecciona una opción:", this);
+                    showMainMenu(chatId, authorizedUsers.get(chatId));
+                } catch (TelegramApiException e) {
+                    logger.error("Error showing developers", e);
+                }
+            }
+        
+            @Override
+            public String getBotUsername() {
+                return botName;
+            }
         }
-    }
-
-    private void startTaskAssignment(long chatId) {
-        BotHelper.sendMessageToTelegram(chatId, "Para asignar una tarea a un desarrollador, primero añade una nueva tarea usando el botón 'Add New Item'.", this);
-    }
-
-    @Override
-    public String getBotUsername() {
-        return botName;
-    }
-}

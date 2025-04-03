@@ -35,14 +35,25 @@ public class ToDoItem {
     OffsetDateTime creation_ts;
     
     @Column(name = "DONE")
-    Boolean done = false;  // Cambiado de boolean primitivo a Boolean objeto
+    Boolean done = false;
+    
+    // Nuevos campos
+    @Column(name = "ESTIMATED_HOURS", precision = 5, scale = 2)
+    Double estimatedHours;
+    
+    @Column(name = "ACTUAL_HOURS", precision = 5, scale = 2)
+    Double actualHours;
+    
+    @Column(name = "SPRINT_ID")
+    Integer sprintId;
 
     public ToDoItem() {
     }
 
     public ToDoItem(int ID, String description, String steps, String status, String priority, 
                     Integer assignedTo, Integer createdBy, Integer isArchived, 
-                    OffsetDateTime creation_ts, Boolean done) {
+                    OffsetDateTime creation_ts, Boolean done, Double estimatedHours, 
+                    Double actualHours, Integer sprintId) {
         this.ID = ID;
         this.description = description;
         this.steps = steps;
@@ -53,6 +64,9 @@ public class ToDoItem {
         this.isArchived = isArchived;
         this.creation_ts = creation_ts;
         this.done = done;
+        this.estimatedHours = estimatedHours;
+        this.actualHours = actualHours;
+        this.sprintId = sprintId;
     }
 
     public int getID() {
@@ -135,6 +149,31 @@ public class ToDoItem {
     public void setDone(Boolean done) {
         this.done = done;
     }
+    
+    // Getters y setters para los nuevos campos
+    public Double getEstimatedHours() {
+        return estimatedHours;
+    }
+
+    public void setEstimatedHours(Double estimatedHours) {
+        this.estimatedHours = estimatedHours;
+    }
+
+    public Double getActualHours() {
+        return actualHours;
+    }
+
+    public void setActualHours(Double actualHours) {
+        this.actualHours = actualHours;
+    }
+
+    public Integer getSprintId() {
+        return sprintId;
+    }
+
+    public void setSprintId(Integer sprintId) {
+        this.sprintId = sprintId;
+    }
 
     @Override
     public String toString() {
@@ -149,6 +188,9 @@ public class ToDoItem {
                 ", isArchived=" + isArchived +
                 ", creation_ts=" + creation_ts +
                 ", done=" + done +
+                ", estimatedHours=" + estimatedHours +
+                ", actualHours=" + actualHours +
+                ", sprintId=" + sprintId +
                 '}';
     }
 }

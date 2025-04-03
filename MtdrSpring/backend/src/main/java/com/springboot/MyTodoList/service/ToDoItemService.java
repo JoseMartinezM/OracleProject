@@ -66,7 +66,7 @@ public class ToDoItemService {
             toDoItem.setID(id);
             toDoItem.setDescription(td.getDescription());
             
-            // Actualizar los nuevos campos
+            // Actualizar los campos existentes
             if (td.getSteps() != null) {
                 toDoItem.setSteps(td.getSteps());
             }
@@ -87,6 +87,17 @@ public class ToDoItemService {
             }
             if (td.getCreation_ts() != null) {
                 toDoItem.setCreation_ts(td.getCreation_ts());
+            }
+            
+            // Actualizar los nuevos campos
+            if (td.getEstimatedHours() != null) {
+                toDoItem.setEstimatedHours(td.getEstimatedHours());
+            }
+            if (td.getActualHours() != null) {
+                toDoItem.setActualHours(td.getActualHours());
+            }
+            if (td.getSprintId() != null) {
+                toDoItem.setSprintId(td.getSprintId());
             }
             
             // Actualizado para manejar Boolean
@@ -176,5 +187,53 @@ public class ToDoItemService {
                            item.getCreatedBy().equals(managerId) && 
                            (item.getIsArchived() == null || item.getIsArchived() == 0))
             .collect(Collectors.toList());
+    }
+    
+    // Nuevos métodos para las funcionalidades de Sprint
+    
+    // Obtener tareas por Sprint ID
+    public List<ToDoItem> findBySprintId(Integer sprintId) {
+        List<ToDoItem> todoItems = toDoItemRepository.findAll();
+        return todoItems.stream()
+            .filter(item -> item.getSprintId() != null && 
+                           item.getSprintId().equals(sprintId) && 
+                           (item.getIsArchived() == null || item.getIsArchived() == 0))
+            .collect(Collectors.toList());
+    }
+    
+    // Actualizar las horas estimadas de una tarea
+    public ToDoItem updateEstimatedHours(int id, Double estimatedHours) {
+        Optional<ToDoItem> toDoItemData = toDoItemRepository.findById(id);
+        if(toDoItemData.isPresent()) {
+            ToDoItem toDoItem = toDoItemData.get();
+            toDoItem.setEstimatedHours(estimatedHours);
+            return toDoItemRepository.save(toDoItem);
+        } else {
+            return null;
+        }
+    }
+    
+    // Actualizar las horas reales trabajadas en una tarea
+    public ToDoItem updateActualHours(int id, Double actualHours) {
+        Optional<ToDoItem> toDoItemData = toDoItemRepository.findById(id);
+        if(toDoItemData.isPresent()) {
+            ToDoItem toDoItem = toDoItemData.get();
+            toDoItem.setActualHours(actualHours);
+            return toDoItemRepository.save(toDoItem);
+        } else {
+            return null;
+        }
+    }
+    
+    // Asignar una tarea a un sprint
+    public ToDoItem assignToSprint(int id, Integer sprintId) {
+        Optional<ToDoItem> toDoItemData = toDoItemRepository.findById(id);
+        if(toDoItemData.isPresent()) {
+            ToDoItem toDoItem = toDoItemData.get();
+            toDoItem.setSprintId(sprintId);
+            return toDoItemRepository.save(toDoItem);
+        } else {
+            return null;
+        }
     }
 }
