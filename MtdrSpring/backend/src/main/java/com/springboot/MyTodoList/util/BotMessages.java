@@ -3,14 +3,16 @@ package com.springboot.MyTodoList.util;
 public enum BotMessages {
 	
 	HELLO_MYTODO_BOT(
-	"Hello! I'm MyTodoList Bot!\nType a new todo item below and press the send button (blue arrow), or select an option below:"),
-	BOT_REGISTERED_STARTED("Bot registered and started succesfully!"),
-	ITEM_DONE("Item done! Select /todolist to return to the list of todo items, or /start to go to the main screen."), 
-	ITEM_UNDONE("Item undone! Select /todolist to return to the list of todo items, or /start to go to the main screen."), 
-	ITEM_DELETED("Item deleted! Select /todolist to return to the list of todo items, or /start to go to the main screen."),
-	TYPE_NEW_TODO_ITEM("Type a new todo item below and press the send button (blue arrow) on the rigth-hand side."),
-	NEW_ITEM_ADDED("New item added! Select /todolist to return to the list of todo items, or /start to go to the main screen."),
-	BYE("Bye! Select /start to resume!");
+	"¡Bienvenido a MyTodoList Bot!\nEscribe una nueva tarea a continuación y presiona el botón de enviar (flecha azul), o selecciona una opción:"),
+	BOT_REGISTERED_STARTED("Bot registrado e iniciado exitosamente!"),
+	ITEM_DONE("¡Tarea completada! Selecciona /todolist para volver a la lista de tareas, o /start para ir a la pantalla principal."), 
+	ITEM_UNDONE("Tarea marcada como pendiente. Selecciona /todolist para volver a la lista de tareas, o /start para ir a la pantalla principal."), 
+	ITEM_DELETED("¡Tarea eliminada! Selecciona /todolist para volver a la lista de tareas, o /start para ir a la pantalla principal."),
+	TYPE_NEW_TODO_ITEM("Escribe una nueva tarea a continuación y presiona el botón de enviar (flecha azul) en el lado derecho."),
+	NEW_ITEM_ADDED("¡Nueva tarea añadida! Selecciona /todolist para volver a la lista de tareas, o /start para ir a la pantalla principal."),
+	BYE("¡Hasta luego! Selecciona /start para continuar."),
+	UNAUTHORIZED("Lo siento, no estás autorizado para usar este bot. Por favor, contacta con tu Manager para obtener acceso."),
+	SHARE_PHONE("Por favor, comparte tu número de teléfono para verificar tu acceso.");
 
 	private String message;
 
