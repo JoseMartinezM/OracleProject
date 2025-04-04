@@ -2571,14 +2571,15 @@ private void handleAddingTaskEstimatedHoursState(long chatId, String messageText
         temporaryData.put(chatId, data);
         
         // Si es un developer, autoasignarse la tarea y terminar
-        if ("Developer".equals(currentUser.getRole())) {
-            data.put("assignedTo", currentUser.getID());
-            createTaskWithSavedData(chatId, currentUser, data);
-        } else {
-            // Si es manager, pasar al estado de asignación de desarrollador
-            chatState.put(chatId, STATE_ASSIGNING_DEVELOPER);
-            showDevelopersForAssignment(chatId);
-        }
+        // Si es un developer, autoasignarse la tarea y terminar
+if ("Developer".equals(currentUser.getRole())) {
+    data.put("assignedTo", currentUser.getID());
+    createTaskWithSavedData(chatId, currentUser, data);
+} else {
+    // Si es manager, pasar al estado de asignación de desarrollador
+    chatState.put(chatId, STATE_ASSIGNING_DEVELOPER);
+    showDevelopersForAssignment(chatId);
+}
         
     } catch (NumberFormatException e) {
         // Manejar error de formato

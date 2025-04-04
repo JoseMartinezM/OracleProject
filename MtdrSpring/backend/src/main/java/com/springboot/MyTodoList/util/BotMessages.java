@@ -3,7 +3,7 @@ package com.springboot.MyTodoList.util;
 public enum BotMessages {
 	
 	HELLO_MYTODO_BOT(
-	"¡Bienvenido a MyTodoList Bot!\nEscribe una nueva tarea a continuación y presiona el botón de enviar (flecha azul), o selecciona una opción:"),
+	"¡Bienvenido al ToDoListBot del equipo 14!\n Selecciona algun boton para iniciar"),
 	BOT_REGISTERED_STARTED("Bot registrado e iniciado exitosamente!"),
 	ITEM_DONE("¡Tarea completada! Selecciona /todolist para volver a la lista de tareas, o /start para ir a la pantalla principal."), 
 	ITEM_UNDONE("Tarea marcada como pendiente. Selecciona /todolist para volver a la lista de tareas, o /start para ir a la pantalla principal."), 
