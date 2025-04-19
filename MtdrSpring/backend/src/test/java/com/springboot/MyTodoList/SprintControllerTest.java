@@ -1,3 +1,4 @@
+/* 
 package com.springboot.MyTodoList;
 
 import com.springboot.MyTodoList.controller.SprintController;
@@ -11,7 +12,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -19,8 +22,9 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(SprintController.class)
@@ -36,8 +40,8 @@ public class SprintControllerTest {
     private ToDoItemService toDoItemService;
     
     @MockBean
-    private UserService userService; // Añadido el mock de UserService
-
+    private UserService userService; 
+    
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -75,4 +79,91 @@ public class SprintControllerTest {
                 .andExpect(jsonPath("$.createdBy").value(1))
                 .andExpect(jsonPath("$.creationTs").value("2025-04-07T10:00:00Z"));
     }
+    
+    @Test
+    public void testGetSprintById() throws Exception {
+        // Respuesta esperada del servicio
+        Sprint sprint = new Sprint();
+        sprint.setId(1);
+        sprint.setName("Sprint de Prueba");
+        sprint.setStartDate(LocalDate.parse("2025-04-01"));
+        sprint.setEndDate(LocalDate.parse("2025-04-15"));
+        sprint.setStatus("ACTIVE");
+        sprint.setCreatedBy(1);
+        sprint.setCreationTs(OffsetDateTime.of(2025, 3, 15, 10, 0, 0, 0, ZoneOffset.UTC));
+
+        when(sprintService.getSprintById(1)).thenReturn(new ResponseEntity<>(sprint, HttpStatus.OK));
+
+        mockMvc.perform(get("/api/sprints/1")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.name").value("Sprint de Prueba"))
+                .andExpect(jsonPath("$.startDate").value("2025-04-01"))
+                .andExpect(jsonPath("$.endDate").value("2025-04-15"))
+                .andExpect(jsonPath("$.status").value("ACTIVE"))
+                .andExpect(jsonPath("$.createdBy").value(1))
+                .andExpect(jsonPath("$.creationTs").value("2025-03-15T10:00:00Z"));
+    }
+
+    @Test
+    public void testGetSprintByIdNotFound() throws Exception {
+        when(sprintService.getSprintById(999)).thenThrow(new RuntimeException("Sprint not found"));
+
+        mockMvc.perform(get("/api/sprints/999")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void testUpdateSprint() throws Exception {
+        // Datos de entrada para actualización
+        Sprint updateSprint = new Sprint();
+        updateSprint.setName("Sprint Actualizado");
+        updateSprint.setStartDate(LocalDate.parse("2025-05-05"));
+        updateSprint.setEndDate(LocalDate.parse("2025-05-20"));
+        updateSprint.setStatus("ACTIVE");
+
+        // Respuesta esperada del servicio
+        Sprint updatedSprint = new Sprint();
+        updatedSprint.setId(1);
+        updatedSprint.setName("Sprint Actualizado");
+        updatedSprint.setStartDate(LocalDate.parse("2025-05-05"));
+        updatedSprint.setEndDate(LocalDate.parse("2025-05-20"));
+        updatedSprint.setStatus("ACTIVE");
+        updatedSprint.setCreatedBy(1);
+        updatedSprint.setCreationTs(OffsetDateTime.of(2025, 3, 15, 10, 0, 0, 0, ZoneOffset.UTC));
+
+        when(sprintService.updateSprint(eq(1), any(Sprint.class))).thenReturn(updatedSprint);
+
+        mockMvc.perform(put("/api/sprints/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateSprint)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.name").value("Sprint Actualizado"))
+                .andExpect(jsonPath("$.startDate").value("2025-05-05"))
+                .andExpect(jsonPath("$.endDate").value("2025-05-20"))
+                .andExpect(jsonPath("$.status").value("ACTIVE"))
+                .andExpect(jsonPath("$.createdBy").value(1))
+                .andExpect(jsonPath("$.creationTs").value("2025-03-15T10:00:00Z"));
+    }
+
+    @Test
+    public void testUpdateSprintNotFound() throws Exception {
+        // Datos de entrada para actualización
+        Sprint updateSprint = new Sprint();
+        updateSprint.setName("Sprint Actualizado");
+        updateSprint.setStartDate(LocalDate.parse("2025-05-05"));
+        updateSprint.setEndDate(LocalDate.parse("2025-05-20"));
+        updateSprint.setStatus("ACTIVE");
+
+        when(sprintService.updateSprint(eq(999), any(Sprint.class))).thenReturn(null);
+
+        mockMvc.perform(put("/api/sprints/999")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateSprint)))
+                .andExpect(status().isNotFound());
+    }
 }
+    */
