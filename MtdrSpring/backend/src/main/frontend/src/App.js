@@ -1,13 +1,8 @@
-/*
-** Oracle Todo Application - Main App Component
-**
-** Copyright (c) 2025, Oracle and/or its affiliates.
-** Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/
-*/
-
+// Modificación del archivo App.js principal
 import React, { useState, useEffect } from 'react';
 import NewItem from './NewItem';
 import GitHubIntegration from './GitHubIntegration';
+import ReportsDashboard from './ReportsDashboard'; // Importamos el nuevo componente
 import { API_LIST } from './API';
 import { Button, TableBody, Modal, Box, Typography, IconButton } from '@mui/material';
 import Moment from 'react-moment';
@@ -21,8 +16,8 @@ function App() {
     const [items, setItems] = useState([]);
     const [error, setError] = useState();
     
-    // Estado para la pestaña activa
-    const [activeTab, setActiveTab] = useState('tasks'); // 'tasks' o 'github'
+    // Estado para la pestaña activa - Añadimos 'reports' como opción
+    const [activeTab, setActiveTab] = useState('tasks'); // 'tasks', 'github' o 'reports'
     
     // Estado para filtros
     const [priorityFilter, setPriorityFilter] = useState('All');
@@ -374,7 +369,7 @@ function App() {
         
         <h1>TODO LIST</h1>
         
-        {/* Pestañas de navegación */}
+        {/* Pestañas de navegación - Añadimos la pestaña de Reportes */}
         <div className="app-tabs">
           <div 
             className={`app-tab ${activeTab === 'tasks' ? 'active' : ''}`}
@@ -387,6 +382,12 @@ function App() {
             onClick={() => setActiveTab('github')}
           >
             GitHub Integration
+          </div>
+          <div 
+            className={`app-tab ${activeTab === 'reports' ? 'active' : ''}`}
+            onClick={() => setActiveTab('reports')}
+          >
+            KPI Reports
           </div>
         </div>
         
@@ -468,8 +469,10 @@ function App() {
               </div>
             )}
           </>
-        ) : (
+        ) : activeTab === 'github' ? (
           <GitHubIntegration todos={items} />
+        ) : (
+          <ReportsDashboard />
         )}
 
         {/* Modal para detalles de tarea */}
