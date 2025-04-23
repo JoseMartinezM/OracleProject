@@ -4,6 +4,7 @@ package com.springboot.MyTodoList.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -54,36 +55,51 @@ public class UserBotController extends TelegramLongPollingBot {
     private Map<Long, Map<String, Object>> temporaryData = new HashMap<>();
     
     // Estados de conversación
-    private static final String STATE_NONE = "NONE";
-    private static final String STATE_ADDING_TASK = "ADDING_TASK";
-    private static final String STATE_ADDING_TASK_HOURS = "ADDING_TASK_HOURS";
-    private static final String STATE_ASSIGNING_TASK = "ASSIGNING_TASK";
-    private static final String STATE_SELECTING_SPRINT = "SELECTING_SPRINT";
-    private static final String STATE_COMPLETING_TASK = "COMPLETING_TASK";
-    private static final String STATE_COMPLETING_TASK_HOURS = "COMPLETING_TASK_HOURS";
-
-    private static final String STATE_VIEWING_SPRINTS = "VIEWING_SPRINTS";
+private static final String STATE_NONE = "NONE";
+private static final String STATE_ADDING_TASK = "ADDING_TASK";
+private static final String STATE_ADDING_TASK_HOURS = "ADDING_TASK_HOURS";
+private static final String STATE_ASSIGNING_TASK = "ASSIGNING_TASK";
+private static final String STATE_SELECTING_SPRINT = "SELECTING_SPRINT";
+private static final String STATE_COMPLETING_TASK = "COMPLETING_TASK";
+private static final String STATE_COMPLETING_TASK_HOURS = "COMPLETING_TASK_HOURS";
+private static final String STATE_VIEWING_SPRINTS = "VIEWING_SPRINTS";
 private static final String STATE_VIEWING_SPRINT_TASKS = "VIEWING_SPRINT_TASKS";
 private static final String STATE_MODIFYING_TASK = "MODIFYING_TASK";
 private static final String STATE_CHANGING_TASK_NAME = "CHANGING_TASK_NAME";
 private static final String STATE_CHANGING_TASK_STATUS = "CHANGING_TASK_STATUS";
 private static final String STATE_ADDING_NEW_TASK = "ADDING_NEW_TASK";
 private static final String STATE_ADDING_TASK_PRIORITY = "ADDING_TASK_PRIORITY";
-
 private static final String STATE_ASSIGNING_DEVELOPER = "ASSIGNING_DEVELOPER";
-
 private static final String STATE_ADDING_TASK_ESTIMATED_HOURS = "ADDING_TASK_ESTIMATED_HOURS";
+
+// Nuevos estados para KPI
+private static final String STATE_KPI_MENU = "KPI_MENU";
+private static final String STATE_KPI_SELECTING_SPRINT = "KPI_SELECTING_SPRINT";
+private static final String STATE_KPI_SELECTING_DEVELOPER = "KPI_SELECTING_DEVELOPER";
+private static final String STATE_KPI_SELECTING_WEEK = "KPI_SELECTING_WEEK";
+private static final String STATE_KPI_TEAM_OR_PERSONAL = "KPI_TEAM_OR_PERSONAL";
+private static final String STATE_KPI_SPRINT_OR_WEEK = "KPI_SPRINT_OR_WEEK";
     
 
-    public UserBotController(String botToken, String botName, ToDoItemService toDoItemService, UserService userService, SprintService sprintService) {
-        super(botToken);
-        logger.info("Bot Token: " + botToken);
-        logger.info("Bot name: " + botName);
-        this.toDoItemService = toDoItemService;
-        this.userService = userService;
-        this.sprintService = sprintService;
-        this.botName = botName;
-    }
+
+   // Inyección a través del constructor en lugar de field injection
+private KpiTelegramController kpiController;
+
+@Autowired
+public UserBotController(String botToken, String botName, 
+                       ToDoItemService toDoItemService, 
+                       UserService userService, 
+                       SprintService sprintService,
+                       KpiTelegramController kpiController) {
+    super(botToken);
+    logger.info("Bot Token: " + botToken);
+    logger.info("Bot name: " + botName);
+    this.toDoItemService = toDoItemService;
+    this.userService = userService;
+    this.sprintService = sprintService;
+    this.botName = botName;
+    this.kpiController = kpiController;
+}
 
     @Override
     public void onUpdateReceived(Update update) {
@@ -276,6 +292,11 @@ private static final String STATE_ADDING_TASK_ESTIMATED_HOURS = "ADDING_TASK_EST
             row.add("⏱️ Ver Horas por Sprint");
             row.add("📊 Resumen de Tareas");
             keyboard.add(row);
+            
+            // Añadir opción de KPIs
+            row = new KeyboardRow();
+            row.add("📈 Ver KPIs");
+            keyboard.add(row);
         }
     
         // Última fila
@@ -354,78 +375,117 @@ private static final String STATE_ADDING_TASK_ESTIMATED_HOURS = "ADDING_TASK_EST
                 case STATE_ADDING_TASK_ESTIMATED_HOURS:
                     handleAddingTaskEstimatedHoursState(chatId, messageTextFromTelegram, currentUser, data);
                     return;
+                // Nuevos casos para estados KPI
+                case STATE_KPI_MENU:
+                    handleKpiMenuState(chatId, messageTextFromTelegram, currentUser, data);
+                    return;
+                case STATE_KPI_SELECTING_SPRINT:
+                    handleKpiSelectingSprintState(chatId, messageTextFromTelegram, currentUser, data);
+                    return;
+                case STATE_KPI_SELECTING_DEVELOPER:
+                    handleKpiSelectingDeveloperState(chatId, messageTextFromTelegram, currentUser, data);
+                    return;
+                case STATE_KPI_SELECTING_WEEK:
+                    handleKpiSelectingWeekState(chatId, messageTextFromTelegram, currentUser, data);
+                    return;
+                case STATE_KPI_TEAM_OR_PERSONAL:
+                    handleKpiTeamOrPersonalState(chatId, messageTextFromTelegram, currentUser, data);
+                    return;
+                case STATE_KPI_SPRINT_OR_WEEK:
+                    handleKpiSprintOrWeekState(chatId, messageTextFromTelegram, currentUser, data);
+                    return;
             }
     
             // Procesar comandos y opciones del menú
-            if (messageTextFromTelegram.equals(BotCommands.START_COMMAND.getCommand())
-                    || messageTextFromTelegram.equals(BotLabels.SHOW_MAIN_SCREEN.getLabel())) {
-                
-                showMainMenu(chatId, currentUser);
+if (messageTextFromTelegram.equals(BotCommands.START_COMMAND.getCommand())
+|| messageTextFromTelegram.equals(BotLabels.SHOW_MAIN_SCREEN.getLabel())) {
+
+showMainMenu(chatId, currentUser);
+
+} else if (messageTextFromTelegram.indexOf(BotLabels.DONE.getLabel()) != -1) {
+processDoneCommand(messageTextFromTelegram, chatId);
+
+} else if (messageTextFromTelegram.indexOf(BotLabels.UNDO.getLabel()) != -1) {
+processUndoCommand(messageTextFromTelegram, chatId);
+
+} else if (messageTextFromTelegram.indexOf(BotLabels.DELETE.getLabel()) != -1) {
+processDeleteCommand(messageTextFromTelegram, chatId);
+
+} else if (messageTextFromTelegram.equals(BotCommands.HIDE_COMMAND.getCommand())
+|| messageTextFromTelegram.equals(BotLabels.HIDE_MAIN_SCREEN.getLabel())) {
+
+BotHelper.sendMessageToTelegram(chatId, BotMessages.BYE.getMessage(), this);
+
+} else if (messageTextFromTelegram.equals(BotCommands.TODO_LIST.getCommand())
+|| messageTextFromTelegram.equals(BotLabels.MY_TODO_LIST.getLabel())) {
+
+showTodoList(chatId, currentUser);
+} else if (messageTextFromTelegram.equals(BotLabels.LIST_ALL_ITEMS.getLabel())) {
+
+if ("Manager".equals(currentUser.getRole())) {
+showSprintsForTaskManagement(chatId);
+} else {
+// Para desarrolladores, mostrar sus tareas asignadas en formato de chat
+showDeveloperTasksInChatFormat(chatId, currentUser);
+}
+
+} else if (messageTextFromTelegram.equals(BotCommands.ADD_ITEM.getCommand())
+|| messageTextFromTelegram.equals(BotLabels.ADD_NEW_ITEM.getLabel())) {
+
+startNewTaskCreation(chatId);
+
+} else if (messageTextFromTelegram.equals("✅ Completar Tarea") && "Developer".equals(currentUser.getRole())) {
+startCompletingTask(chatId, currentUser);
+
+} else if (messageTextFromTelegram.equals("📋 Ver Sprints")) {
+showAvailableSprints(chatId);
+
+} else if (messageTextFromTelegram.equals("👨‍💻 Ver Desarrolladores") && "Manager".equals(currentUser.getRole())) {
+showDevelopers(chatId);
+
+} else if (messageTextFromTelegram.equals("📝 Asignar Tarea a Sprint") && "Manager".equals(currentUser.getRole())) {
+startAssigningTaskToSprint(chatId);
+
+} else if (messageTextFromTelegram.equals("⏱️ Ver Horas por Sprint") && "Manager".equals(currentUser.getRole())) {
+showHoursBySprintReport(chatId);
+
+} else if (messageTextFromTelegram.equals("📊 Resumen de Tareas") && "Manager".equals(currentUser.getRole())) {
+showTasksSummary(chatId);
+
+} else if (messageTextFromTelegram.equals("📈 Ver KPIs") && "Manager".equals(currentUser.getRole())) {
+    // Verificar si kpiController está disponible
+    if (kpiController == null) {
+        logger.error("KpiTelegramController es null. Posible error de inyección de dependencias.");
+        SendMessage errorMessage = new SendMessage();
+        errorMessage.setChatId(chatId);
+        errorMessage.setText("Error interno: No se pudo cargar el componente KPI. Por favor, intenta más tarde o contacta al administrador.");
+        try {
+            execute(errorMessage);
+        } catch (TelegramApiException e) {
+            logger.error("Error enviando mensaje de error", e);
+        }
+        return;
+    }
     
-            } else if (messageTextFromTelegram.indexOf(BotLabels.DONE.getLabel()) != -1) {
-                processDoneCommand(messageTextFromTelegram, chatId);
-    
-            } else if (messageTextFromTelegram.indexOf(BotLabels.UNDO.getLabel()) != -1) {
-                processUndoCommand(messageTextFromTelegram, chatId);
-    
-            } else if (messageTextFromTelegram.indexOf(BotLabels.DELETE.getLabel()) != -1) {
-                processDeleteCommand(messageTextFromTelegram, chatId);
-    
-            } else if (messageTextFromTelegram.equals(BotCommands.HIDE_COMMAND.getCommand())
-                    || messageTextFromTelegram.equals(BotLabels.HIDE_MAIN_SCREEN.getLabel())) {
-                
-                BotHelper.sendMessageToTelegram(chatId, BotMessages.BYE.getMessage(), this);
-    
-            } else if (messageTextFromTelegram.equals(BotCommands.TODO_LIST.getCommand())
-                    || messageTextFromTelegram.equals(BotLabels.MY_TODO_LIST.getLabel())) {
-                
-                showTodoList(chatId, currentUser);
-            } else if (messageTextFromTelegram.equals(BotLabels.LIST_ALL_ITEMS.getLabel())) {
-                
-                if ("Manager".equals(currentUser.getRole())) {
-                    showSprintsForTaskManagement(chatId);
-                } else {
-                    // Para desarrolladores, mostrar sus tareas asignadas en formato de chat
-                    showDeveloperTasksInChatFormat(chatId, currentUser);
-                }
-                
-            } else if (messageTextFromTelegram.equals(BotCommands.ADD_ITEM.getCommand())
-                    || messageTextFromTelegram.equals(BotLabels.ADD_NEW_ITEM.getLabel())) {
-                
-                startNewTaskCreation(chatId);
-                
-            } else if (messageTextFromTelegram.equals("✅ Completar Tarea") && "Developer".equals(currentUser.getRole())) {
-                startCompletingTask(chatId, currentUser);
-                
-            } else if (messageTextFromTelegram.equals("📋 Ver Sprints")) {
-                showAvailableSprints(chatId);
-                
-            } else if (messageTextFromTelegram.equals("👨‍💻 Ver Desarrolladores") && "Manager".equals(currentUser.getRole())) {
-                showDevelopers(chatId);
-                
-            } else if (messageTextFromTelegram.equals("📝 Asignar Tarea a Sprint") && "Manager".equals(currentUser.getRole())) {
-                startAssigningTaskToSprint(chatId);
-                
-            } else if (messageTextFromTelegram.equals("⏱️ Ver Horas por Sprint") && "Manager".equals(currentUser.getRole())) {
-                showHoursBySprintReport(chatId);
-                
-            } else if (messageTextFromTelegram.equals("📊 Resumen de Tareas") && "Manager".equals(currentUser.getRole())) {
-                showTasksSummary(chatId);
-                
-            } 
-            // Manejar comandos de acción sobre tareas para desarrolladores
-            else if ("Developer".equals(currentUser.getRole()) && 
-                    (messageTextFromTelegram.startsWith("iniciar ") || 
-                    messageTextFromTelegram.startsWith("completar ") || 
-                    messageTextFromTelegram.startsWith("reabrir ") || 
-                    messageTextFromTelegram.startsWith("ver "))) {
-                
-                handleDeveloperTaskAction(chatId, messageTextFromTelegram, currentUser);
-            }
-            else {
-                // Asumir que es un nuevo ítem de tarea (estado por defecto)
-                addNewTodoItem(messageTextFromTelegram, chatId, currentUser);
-            }
+    // Iniciar el flujo de KPIs
+    chatState.put(chatId, STATE_KPI_MENU);
+    data.clear(); // Limpiar datos existentes
+    temporaryData.put(chatId, data);
+    kpiController.showKpiMenu(chatId, this, currentUser);
+}
+// Manejar comandos de acción sobre tareas para desarrolladores
+else if ("Developer".equals(currentUser.getRole()) && 
+(messageTextFromTelegram.startsWith("iniciar ") || 
+messageTextFromTelegram.startsWith("completar ") || 
+messageTextFromTelegram.startsWith("reabrir ") || 
+messageTextFromTelegram.startsWith("ver "))) {
+
+handleDeveloperTaskAction(chatId, messageTextFromTelegram, currentUser);
+}
+else {
+// Asumir que es un nuevo ítem de tarea (estado por defecto)
+addNewTodoItem(messageTextFromTelegram, chatId, currentUser);
+}
         }
     }
     
@@ -2625,5 +2685,394 @@ if ("Developer".equals(currentUser.getRole())) {
             @Override
             public String getBotUsername() {
                 return botName;
+            }
+
+            private void handleKpiMenuState(long chatId, String messageText, User currentUser, Map<String, Object> data) {
+                // Verificar si kpiController está disponible
+                if (kpiController == null) {
+                    logger.error("KpiTelegramController es null en handleKpiMenuState");
+                    SendMessage errorMessage = new SendMessage();
+                    errorMessage.setChatId(chatId);
+                    errorMessage.setText("Error interno: No se pudo cargar el componente KPI. Por favor, intenta más tarde o contacta al administrador.");
+                    try {
+                        execute(errorMessage);
+                        chatState.put(chatId, STATE_NONE);
+                        showMainMenu(chatId, currentUser);
+                    } catch (TelegramApiException e) {
+                        logger.error("Error enviando mensaje de error", e);
+                    }
+                    return;
+                }
+                
+                switch (messageText) {
+                    case "1":
+                        // Lista de Tareas Completadas por Sprint
+                        chatState.put(chatId, STATE_KPI_SELECTING_SPRINT);
+                        data.put("kpiType", "completedTasks");
+                        kpiController.showSprintSelectionForKpi(chatId, this);
+                        break;
+                    case "2":
+                        // KPI de Equipo por Sprint
+                        chatState.put(chatId, STATE_KPI_SELECTING_SPRINT);
+                        data.put("kpiType", "teamSprint");
+                        kpiController.showSprintSelectionForKpi(chatId, this);
+                        break;
+                    case "3":
+                        // KPI de Equipo por Semana
+                        chatState.put(chatId, STATE_KPI_SELECTING_WEEK);
+                        data.put("kpiType", "teamWeek");
+                        kpiController.requestWeekSelection(chatId, this);
+                        break;
+                    case "4":
+                        // KPI Personal por Sprint
+                        chatState.put(chatId, STATE_KPI_SELECTING_DEVELOPER);
+                        data.put("kpiType", "personalSprint");
+                        kpiController.showDeveloperSelectionForKpi(chatId, this);
+                        break;
+                    case "5":
+                        // KPI Personal por Semana
+                        chatState.put(chatId, STATE_KPI_SELECTING_DEVELOPER);
+                        data.put("kpiType", "personalWeek");
+                        kpiController.showDeveloperSelectionForKpi(chatId, this);
+                        break;
+                    case "menu":
+                        // Volver al menú principal
+                        chatState.put(chatId, STATE_NONE);
+                        showMainMenu(chatId, currentUser);
+                        break;
+                    default:
+                        SendMessage errorMessage = new SendMessage();
+                        errorMessage.setChatId(chatId);
+                        errorMessage.setText("❌ Opción no válida. Por favor, selecciona una opción del 1 al 5, o 'menu' para volver al menú principal.");
+                        try {
+                            execute(errorMessage);
+                            kpiController.showKpiMenu(chatId, this, currentUser);
+                        } catch (TelegramApiException e) {
+                            logger.error("Error sending error message", e);
+                        }
+                        break;
+                }
+            }
+            
+            private void handleKpiSelectingSprintState(long chatId, String messageText, User currentUser, Map<String, Object> data) {
+                // Verificar si kpiController está disponible
+                if (kpiController == null) {
+                    logger.error("KpiTelegramController es null en handleKpiSelectingSprintState");
+                    SendMessage errorMessage = new SendMessage();
+                    errorMessage.setChatId(chatId);
+                    errorMessage.setText("Error interno: No se pudo cargar el componente KPI. Por favor, intenta más tarde o contacta al administrador.");
+                    try {
+                        execute(errorMessage);
+                        chatState.put(chatId, STATE_NONE);
+                        showMainMenu(chatId, currentUser);
+                    } catch (TelegramApiException e) {
+                        logger.error("Error enviando mensaje de error", e);
+                    }
+                    return;
+                }
+                
+                if (messageText.equalsIgnoreCase("menu")) {
+                    chatState.put(chatId, STATE_NONE);
+                    showMainMenu(chatId, currentUser);
+                    return;
+                }
+                
+                try {
+                    int sprintId = Integer.parseInt(messageText);
+                    String kpiType = (String) data.get("kpiType");
+                    
+                    switch (kpiType) {
+                        case "completedTasks":
+                            kpiController.showCompletedTasksBySprint(chatId, this, sprintId);
+                            break;
+                        case "teamSprint":
+                            kpiController.showTeamKpiBySprint(chatId, this, sprintId);
+                            break;
+                        case "personalSprint":
+                            int userId = (int) data.get("userId");
+                            kpiController.showPersonalKpiBySprint(chatId, this, userId, sprintId);
+                            break;
+                        default:
+                            break;
+                    }
+                    
+                    // Volver al menú de KPIs después de mostrar el reporte
+                    chatState.put(chatId, STATE_KPI_MENU);
+                    kpiController.showKpiMenu(chatId, this, currentUser);
+                    
+                } catch (NumberFormatException e) {
+                    SendMessage errorMessage = new SendMessage();
+                    errorMessage.setChatId(chatId);
+                    errorMessage.setText("❌ Por favor, ingresa un número válido para el ID del sprint o 'menu' para volver.");
+                    
+                    try {
+                        execute(errorMessage);
+                    } catch (TelegramApiException ex) {
+                        logger.error("Error sending error message", ex);
+                    }
+                }
+            }
+            
+            private void handleKpiSelectingDeveloperState(long chatId, String messageText, User currentUser, Map<String, Object> data) {
+                // Verificar si kpiController está disponible
+                if (kpiController == null) {
+                    logger.error("KpiTelegramController es null en handleKpiSelectingDeveloperState");
+                    SendMessage errorMessage = new SendMessage();
+                    errorMessage.setChatId(chatId);
+                    errorMessage.setText("Error interno: No se pudo cargar el componente KPI. Por favor, intenta más tarde o contacta al administrador.");
+                    try {
+                        execute(errorMessage);
+                        chatState.put(chatId, STATE_NONE);
+                        showMainMenu(chatId, currentUser);
+                    } catch (TelegramApiException e) {
+                        logger.error("Error enviando mensaje de error", e);
+                    }
+                    return;
+                }
+                
+                if (messageText.equalsIgnoreCase("menu")) {
+                    chatState.put(chatId, STATE_NONE);
+                    showMainMenu(chatId, currentUser);
+                    return;
+                }
+                
+                try {
+                    int userId = Integer.parseInt(messageText);
+                    String kpiType = (String) data.get("kpiType");
+                    data.put("userId", userId);
+                    
+                    switch (kpiType) {
+                        case "personalSprint":
+                            chatState.put(chatId, STATE_KPI_SELECTING_SPRINT);
+                            kpiController.showSprintSelectionForKpi(chatId, this);
+                            break;
+                        case "personalWeek":
+                            chatState.put(chatId, STATE_KPI_SELECTING_WEEK);
+                            kpiController.requestWeekSelection(chatId, this);
+                            break;
+                        default:
+                            break;
+                    }
+                    
+                } catch (NumberFormatException e) {
+                    SendMessage errorMessage = new SendMessage();
+                    errorMessage.setChatId(chatId);
+                    errorMessage.setText("❌ Por favor, ingresa un número válido para el ID del desarrollador o 'menu' para volver.");
+                    
+                    try {
+                        execute(errorMessage);
+                    } catch (TelegramApiException ex) {
+                        logger.error("Error sending error message", ex);
+                    }
+                }
+            }
+            
+            private void handleKpiSelectingWeekState(long chatId, String messageText, User currentUser, Map<String, Object> data) {
+                // Verificar si kpiController está disponible
+                if (kpiController == null) {
+                    logger.error("KpiTelegramController es null en handleKpiSelectingWeekState");
+                    SendMessage errorMessage = new SendMessage();
+                    errorMessage.setChatId(chatId);
+                    errorMessage.setText("Error interno: No se pudo cargar el componente KPI. Por favor, intenta más tarde o contacta al administrador.");
+                    try {
+                        execute(errorMessage);
+                        chatState.put(chatId, STATE_NONE);
+                        showMainMenu(chatId, currentUser);
+                    } catch (TelegramApiException e) {
+                        logger.error("Error enviando mensaje de error", e);
+                    }
+                    return;
+                }
+                
+                if (messageText.equalsIgnoreCase("menu")) {
+                    chatState.put(chatId, STATE_NONE);
+                    showMainMenu(chatId, currentUser);
+                    return;
+                }
+                
+                // Formato esperado: YYYY-WW
+                String[] parts = messageText.split("-");
+                if (parts.length != 2) {
+                    SendMessage errorMessage = new SendMessage();
+                    errorMessage.setChatId(chatId);
+                    errorMessage.setText("❌ Formato incorrecto. Por favor, ingresa el año y semana en formato 'YYYY-WW'.");
+                    
+                    try {
+                        execute(errorMessage);
+                        kpiController.requestWeekSelection(chatId, this);
+                    } catch (TelegramApiException e) {
+                        logger.error("Error sending error message", e);
+                    }
+                    return;
+                }
+                
+                try {
+                    int year = Integer.parseInt(parts[0]);
+                    int weekNumber = Integer.parseInt(parts[1]);
+                    
+                    if (year < 2020 || year > 2030 || weekNumber < 1 || weekNumber > 53) {
+                        SendMessage errorMessage = new SendMessage();
+                        errorMessage.setChatId(chatId);
+                        errorMessage.setText("❌ Valores no válidos. El año debe estar entre 2020 y 2030, y la semana entre 1 y 53.");
+                        
+                        try {
+                            execute(errorMessage);
+                            kpiController.requestWeekSelection(chatId, this);
+                        } catch (TelegramApiException e) {
+                            logger.error("Error sending error message", e);
+                        }
+                        return;
+                    }
+                    
+                    String kpiType = (String) data.get("kpiType");
+                    
+                    switch (kpiType) {
+                        case "teamWeek":
+                            kpiController.showTeamKpiByWeek(chatId, this, year, weekNumber);
+                            break;
+                        case "personalWeek":
+                            int userId = (int) data.get("userId");
+                            kpiController.showPersonalKpiByWeek(chatId, this, userId, year, weekNumber);
+                            break;
+                        default:
+                            break;
+                    }
+                    
+                    // Volver al menú de KPIs después de mostrar el reporte
+                    chatState.put(chatId, STATE_KPI_MENU);
+                    kpiController.showKpiMenu(chatId, this, currentUser);
+                    
+                } catch (NumberFormatException e) {
+                    SendMessage errorMessage = new SendMessage();
+                    errorMessage.setChatId(chatId);
+                    errorMessage.setText("❌ Por favor, ingresa números válidos para el año y semana.");
+                    
+                    try {
+                        execute(errorMessage);
+                        kpiController.requestWeekSelection(chatId, this);
+                    } catch (TelegramApiException ex) {
+                        logger.error("Error sending error message", ex);
+                    }
+                }
+            }
+            
+            private void handleKpiTeamOrPersonalState(long chatId, String messageText, User currentUser, Map<String, Object> data) {
+                // Verificar si kpiController está disponible
+                if (kpiController == null) {
+                    logger.error("KpiTelegramController es null en handleKpiTeamOrPersonalState");
+                    SendMessage errorMessage = new SendMessage();
+                    errorMessage.setChatId(chatId);
+                    errorMessage.setText("Error interno: No se pudo cargar el componente KPI. Por favor, intenta más tarde o contacta al administrador.");
+                    try {
+                        execute(errorMessage);
+                        chatState.put(chatId, STATE_NONE);
+                        showMainMenu(chatId, currentUser);
+                    } catch (TelegramApiException e) {
+                        logger.error("Error enviando mensaje de error", e);
+                    }
+                    return;
+                }
+                
+                if (messageText.equalsIgnoreCase("menu")) {
+                    chatState.put(chatId, STATE_NONE);
+                    showMainMenu(chatId, currentUser);
+                    return;
+                }
+                
+                switch (messageText) {
+                    case "1": // Equipo
+                        chatState.put(chatId, STATE_KPI_SPRINT_OR_WEEK);
+                        data.put("kpiTeamType", "team");
+                        // Preguntar si quiere por sprint o por semana
+                        SendMessage message = new SendMessage();
+                        message.setChatId(chatId);
+                        message.setText("¿Deseas ver KPIs de equipo por Sprint o por Semana?\n\n" +
+                                        "1️⃣ Por Sprint\n" +
+                                        "2️⃣ Por Semana\n\n" +
+                                        "🔙 Para volver al menú principal, escribe 'menu'");
+                        try {
+                            execute(message);
+                        } catch (TelegramApiException e) {
+                            logger.error("Error sending message", e);
+                        }
+                        break;
+                    case "2": // Personal
+                        chatState.put(chatId, STATE_KPI_SELECTING_DEVELOPER);
+                        kpiController.showDeveloperSelectionForKpi(chatId, this);
+                        break;
+                    default:
+                        SendMessage errorMessage = new SendMessage();
+                        errorMessage.setChatId(chatId);
+                        errorMessage.setText("❌ Opción no válida. Por favor, selecciona 1 para Equipo, 2 para Personal, o 'menu' para volver.");
+                        try {
+                            execute(errorMessage);
+                        } catch (TelegramApiException e) {
+                            logger.error("Error sending error message", e);
+                        }
+                        break;
+                }
+            }
+            
+            private void handleKpiSprintOrWeekState(long chatId, String messageText, User currentUser, Map<String, Object> data) {
+                // Verificar si kpiController está disponible
+                if (kpiController == null) {
+                    logger.error("KpiTelegramController es null en handleKpiSprintOrWeekState");
+                    SendMessage errorMessage = new SendMessage();
+                    errorMessage.setChatId(chatId);
+                    errorMessage.setText("Error interno: No se pudo cargar el componente KPI. Por favor, intenta más tarde o contacta al administrador.");
+                    try {
+                        execute(errorMessage);
+                        chatState.put(chatId, STATE_NONE);
+                        showMainMenu(chatId, currentUser);
+                    } catch (TelegramApiException e) {
+                        logger.error("Error enviando mensaje de error", e);
+                    }
+                    return;
+                }
+                
+                if (messageText.equalsIgnoreCase("menu")) {
+                    chatState.put(chatId, STATE_NONE);
+                    showMainMenu(chatId, currentUser);
+                    return;
+                }
+                
+                String kpiTeamType = (String) data.get("kpiTeamType");
+                
+                switch (messageText) {
+                    case "1": // Por Sprint
+                        if ("team".equals(kpiTeamType)) {
+                            chatState.put(chatId, STATE_KPI_SELECTING_SPRINT);
+                            data.put("kpiType", "teamSprint");
+                            kpiController.showSprintSelectionForKpi(chatId, this);
+                        } else {
+                            // Caso personal
+                            chatState.put(chatId, STATE_KPI_SELECTING_SPRINT);
+                            data.put("kpiType", "personalSprint");
+                            kpiController.showSprintSelectionForKpi(chatId, this);
+                        }
+                        break;
+                    case "2": // Por Semana
+                        if ("team".equals(kpiTeamType)) {
+                            chatState.put(chatId, STATE_KPI_SELECTING_WEEK);
+                            data.put("kpiType", "teamWeek");
+                            kpiController.requestWeekSelection(chatId, this);
+                        } else {
+                            // Caso personal
+                            chatState.put(chatId, STATE_KPI_SELECTING_WEEK);
+                            data.put("kpiType", "personalWeek");
+                            kpiController.requestWeekSelection(chatId, this);
+                        }
+                        break;
+                    default:
+                        SendMessage errorMessage = new SendMessage();
+                        errorMessage.setChatId(chatId);
+                        errorMessage.setText("❌ Opción no válida. Por favor, selecciona 1 para Sprint, 2 para Semana, o 'menu' para volver.");
+                        try {
+                            execute(errorMessage);
+                        } catch (TelegramApiException e) {
+                            logger.error("Error sending error message", e);
+                        }
+                        break;
+                }
             }
         }
