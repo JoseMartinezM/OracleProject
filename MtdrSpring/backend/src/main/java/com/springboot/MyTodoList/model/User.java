@@ -3,26 +3,27 @@ package com.springboot.MyTodoList.model;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "USERS", schema = "TODOUSER")
+@Table(name = "USERS", schema = "TODOUSER") // Explicit schema declaration
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    int ID;
+    @Column(name = "ID") // Match exact column name
+    private int ID;
     
     @Column(name = "USERNAME", nullable = false, unique = true)
-    String username;
+    private String username;
     
     @Column(name = "PASSWORD", nullable = false)
-    String password;
+    private String password;
     
-    @Column(name = "ROLE", nullable = false)
-    String role;
+    @Column(name = "ROLE")
+    private String role;
     
     @Column(name = "PHONE")
-    String phone;
+    private String phone;
     
     @Column(name = "NAME")
-    String name;
+    private String name;
 
     public User() {
     }
