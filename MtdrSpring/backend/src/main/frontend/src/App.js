@@ -13,6 +13,7 @@ import { Button, TableBody, Modal, Box, Typography, IconButton } from '@mui/mate
 import Moment from 'react-moment';
 import CloseIcon from '@mui/icons-material/Close';
 import './index.css';
+import { TextField, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 
 function App() {
     // Estados de la aplicación
@@ -31,6 +32,61 @@ function App() {
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedTask, setSelectedTask] = useState(null);
 
+    // Estados pata la autenticacion
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [currentUser, setCurrentUser] = useState({});
+    const [loginOpen, setLoginOpen] = useState(true);
+    const [loginData, setLoginData] = useState({
+        username: '',
+        password: ''
+    });
+    const [loginError, setLoginError] = useState('');
+
+    // Login handler
+    const handleLogin = async () => {
+      try {
+          setLoginError('');
+          const response = await fetch('/api/users/username/' + loginData.username);
+          if (response.ok) {
+              const user = await response.json();
+              if (user.password === loginData.password) {
+                  setIsAuthenticated(true);
+                  setCurrentUser({
+                      ID: user.ID,
+                      username: user.username,
+                      role: user.role,
+                      name: user.name
+                  });
+                  setLoginOpen(false);
+              } else {
+                  setLoginError('Invalid password');
+              }
+          } else {
+              setLoginError('User not found');
+          }
+      } catch (error) {
+          setLoginError('Login failed');
+          console.error('Login error:', error);
+      }
+    };
+
+  // Logout handler
+  const handleLogout = () => {
+      setIsAuthenticated(false);
+      setCurrentUser({});
+      setLoginOpen(true);
+      setLoginData({ username: '', password: '' });
+  };
+
+  // Update login form data
+  const handleLoginChange = (e) => {
+      const { name, value } = e.target;
+      setLoginData(prev => ({
+          ...prev,
+          [name]: value
+      }));
+  };
+
     // Función para abrir el modal con la tarea seleccionada
     const openTaskModal = (task) => {
         setSelectedTask(task);
@@ -43,6 +99,12 @@ function App() {
     };
 
     function deleteItem(deleteId) {
+      // First check if the current user is the creator or a manager
+      const taskToDelete = items.find(item => item.id === deleteId);
+      if (currentUser.role !== 'Manager' && taskToDelete.createdBy !== currentUser.ID) {
+          setError(new Error('Only managers or task creators can delete tasks'));
+          return;
+      }
       fetch(`${API_LIST}/${deleteId}`, {
         method: 'DELETE',
       })
@@ -224,61 +286,66 @@ function App() {
           });
     }, []);
     
-    function addItem(text, steps, priority) {
-      setInserting(true);
-      
-      // Obtener la fecha y hora actual
-      const currentTimestamp = new Date().toISOString();
-      
-      var data = {
-        description: text,
-        done: false,
-        status: "Pending", // Siempre comenzar en Pending
-        priority: priority,
-        steps: steps || '',
-        creation_ts: currentTimestamp
-      };
-      
-      fetch(API_LIST, {
-        method: 'POST',
-        headers: {
+    // Example modification to addItem function
+function addItem(text, steps, priority) {
+  if (!currentUser?.ID) {
+    setError(new Error('User not authenticated'));
+    return;
+  }
+  setInserting(true);
+  
+  const currentTimestamp = new Date().toISOString();
+  
+  var data = {
+      description: text,
+      done: false,
+      status: "Pending",
+      priority: priority,
+      steps: steps || '',
+      creation_ts: currentTimestamp,
+      createdBy: currentUser.ID // Add the current user's ID
+  };
+  
+  fetch(API_LIST, {
+      method: 'POST',
+      headers: {
           'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data),
-      }).then((response) => {
-        if (response.ok) {
+      },
+      body: JSON.stringify(data),
+  })
+  .then((response) => {
+      if (response.ok) {
           return response;
-        } else {
+      } else {
           throw new Error('Something went wrong ...');
-        }
-      }).then(
-        (result) => {
-          // Obtenemos la ubicación del nuevo recurso
+      }
+  })
+  .then(
+      (result) => {
           var id = result.headers.get('location');
           
-          // Creamos un nuevo item con los datos disponibles
           var newItem = {
-            id: id, 
-            description: text, 
-            done: false,
-            status: "Pending",
-            priority: priority,
-            steps: steps || '',
-            createdAt: currentTimestamp,
-            assignedTo: null,
-            createdBy: null,
-            isArchived: 0
+              id: id, 
+              description: text, 
+              done: false,
+              status: "Pending",
+              priority: priority,
+              steps: steps || '',
+              createdAt: currentTimestamp,
+              assignedTo: null,
+              createdBy: currentUser.ID, // Add the current user's ID
+              isArchived: 0
           };
           
           setItems([newItem, ...items]);
           setInserting(false);
-        },
-        (error) => {
+      },
+      (error) => {
           setInserting(false);
           setError(error);
-        }
-      );
-    }
+      }
+  );
+}
     
     // Filtrado por prioridad
     const filteredItems = items.filter(item => {
@@ -364,14 +431,62 @@ function App() {
 
     return (
       <div className="App">
-        {/* Oracle Logo (tamaño aumentado) */}
-        <img 
-          src="https://imgs.search.brave.com/VP0I6z3w18_vEzuRoDlY0arRjFf9OdUsX3928ysRXmE/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9sb2dv/ZG93bmxvYWQub3Jn/L3dwLWNvbnRlbnQv/dXBsb2Fkcy8yMDE0/LzA0L29yYWNsZS1s/b2dvLTAucG5n" 
-          alt="Oracle Logo" 
-          className="oracle-logo" 
-          style={{ height: "180px" }} // Hacer el logo más grande
-        />
-        
+        {/* Login Dialog - shown when not authenticated */}
+        {!isAuthenticated && (
+          <Dialog open={loginOpen} onClose={() => setLoginOpen(false)}>
+            <DialogTitle>Login</DialogTitle>
+            <DialogContent>
+              <TextField
+                autoFocus
+                margin="dense"
+                name="username"
+                type="text"
+                label="Username"
+                fullWidth
+                variant='standard'
+                value={loginData.username}
+                onChange={handleLoginChange}
+              />
+              <TextField
+                margin="dense"
+                name="password"
+                label="Password"
+                type="password"
+                fullWidth
+                variant="standard"
+                value={loginData.password}
+                onChange={handleLoginChange}
+              />
+              {loginError && <p className="error-message">{loginError}</p>}
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleLogin}>Login</Button>
+              </DialogActions>
+            </Dialog>
+        )}
+
+        {/*Only show app content if authenticated*/}
+        <>
+          {/* Add logout button at the top */}
+          <div style={{ position: 'absolute', top: '10px', right: '10px' }}>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={handleLogout}
+            >
+              Logout ({currentUser?.username || 'User'})
+            </Button>
+          </div>
+
+          {/* Oracle Logo (tamaño aumentado) */}
+          <img 
+            src="https://imgs.search.brave.com/VP0I6z3w18_vEzuRoDlY0arRjFf9OdUsX3928ysRXmE/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9sb2dv/ZG93bmxvYWQub3Jn/L3dwLWNvbnRlbnQv/dXBsb2Fkcy8yMDE0/LzA0L29yYWNsZS1s/b2dvLTAucG5n" 
+            alt="Oracle Logo" 
+            className="oracle-logo" 
+            style={{ height: "180px" }} // Hacer el logo más grande
+          />
+        </>
+
         <h1>TODO LIST</h1>
         
         {/* Pestañas de navegación */}
