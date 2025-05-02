@@ -21,5 +21,10 @@ const API_LIST = '/api/todolist';
 const GITHUB_CREATE_BRANCH = '/api/github/create-branch';
 const GITHUB_GET_BRANCHES = '/api/github/get-branches';
 
-export { API_LIST, GITHUB_CREATE_BRANCH, GITHUB_GET_BRANCHES };
+// Nuevos endpoints para sprints y usuarios
+const API_SPRINTS = '/api/sprints';
+const API_USERS = '/api/users';
+const API_TASKS_BY_SPRINT = '/api/todolist/sprint';
+
+export { API_LIST, GITHUB_CREATE_BRANCH, GITHUB_GET_BRANCHES, API_SPRINTS, API_USERS, API_TASKS_BY_SPRINT };
 export default API_LIST;

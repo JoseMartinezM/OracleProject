@@ -11,6 +11,7 @@ import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
+import com.springboot.MyTodoList.controller.KpiTelegramController;
 import com.springboot.MyTodoList.controller.UserBotController;
 import com.springboot.MyTodoList.service.SprintService;
 import com.springboot.MyTodoList.service.ToDoItemService;
@@ -20,35 +21,39 @@ import com.springboot.MyTodoList.util.BotMessages;
 @SpringBootApplication
 public class MyTodoListApplication implements CommandLineRunner {
 
-	private static final Logger logger = LoggerFactory.getLogger(MyTodoListApplication.class);
+    private static final Logger logger = LoggerFactory.getLogger(MyTodoListApplication.class);
 
-	@Autowired
-	private ToDoItemService toDoItemService;
-	
-	@Autowired
-	private UserService userService;
-	
-	@Autowired
-	private SprintService sprintService;
+    @Autowired
+    private ToDoItemService toDoItemService;
+    
+    @Autowired
+    private UserService userService;
+    
+    @Autowired
+    private SprintService sprintService;
+    
+    @Autowired
+    private KpiTelegramController kpiController;
 
-	@Value("${telegram.bot.token}")
-	private String telegramBotToken;
+    @Value("${telegram.bot.token}")
+    private String telegramBotToken;
 
-	@Value("${telegram.bot.name}")
-	private String botName;
+    @Value("${telegram.bot.name}")
+    private String botName;
 
-	public static void main(String[] args) {
-		SpringApplication.run(MyTodoListApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(MyTodoListApplication.class, args);
+    }
 
-	@Override
-	public void run(String... args) throws Exception {
-		try {
-			TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
-			telegramBotsApi.registerBot(new UserBotController(telegramBotToken, botName, toDoItemService, userService, sprintService));
-			logger.info(BotMessages.BOT_REGISTERED_STARTED.getMessage());
-		} catch (TelegramApiException e) {
-			logger.error("Error al iniciar el bot de Telegram", e);
-		}
-	}
+    @Override
+    public void run(String... args) throws Exception {
+        try {
+            TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
+            UserBotController userBotController = new UserBotController(telegramBotToken, botName, toDoItemService, userService, sprintService, kpiController);
+            telegramBotsApi.registerBot(userBotController);
+            logger.info(BotMessages.BOT_REGISTERED_STARTED.getMessage());
+        } catch (TelegramApiException e) {
+            logger.error("Error al iniciar el bot de Telegram", e);
+        }
+    }
 }

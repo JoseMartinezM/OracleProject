@@ -8,6 +8,8 @@ function NewItem(props) {
   const [item, setItem] = useState('');
   const [steps, setSteps] = useState('');
   const [priority, setPriority] = useState('Medium');
+  const [sprintId, setSprintId] = useState('');
+  const [assignedTo, setAssignedTo] = useState('');
   const [expanded, setExpanded] = useState(false);
   
   function handleSubmit(e) {
@@ -15,12 +17,14 @@ function NewItem(props) {
     if (!item.trim()) {
       return;
     }
-    // Pasamos solo descripción, pasos, y prioridad (no el estado)
-    props.addItem(item, steps, priority);
+    // Pasamos descripción, pasos, prioridad, sprint y desarrollador asignado
+    props.addItem(item, steps, priority, sprintId || null, assignedTo || null);
     // Reseteamos los campos
     setItem("");
     setSteps("");
     setPriority("Medium");
+    setSprintId("");
+    setAssignedTo("");
   }
   
   function handleChange(e) {
@@ -97,19 +101,63 @@ function NewItem(props) {
                 </Select>
               </FormControl>
             </div>
+            
+            {/* Selector de Sprint */}
+            <div className="form-row form-selects">
+              <FormControl variant="outlined" className="sprint-select" fullWidth>
+                <InputLabel id="sprint-label" className="custom-input-label">Sprint</InputLabel>
+                <Select
+                  labelId="sprint-label"
+                  value={sprintId}
+                  onChange={(e) => setSprintId(e.target.value)}
+                  label="Sprint"
+                  className="custom-select"
+                  disabled={props.isInserting}
+                >
+                  <MenuItem value="">None</MenuItem>
+                  {props.sprints && props.sprints.map(sprint => (
+                    <MenuItem key={sprint.id} value={sprint.id}>
+                      {sprint.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </div>
+            
+            {/* Selector de Desarrollador */}
+            <div className="form-row form-selects">
+              <FormControl variant="outlined" className="developer-select" fullWidth>
+                <InputLabel id="developer-label" className="custom-input-label">Assigned To</InputLabel>
+                <Select
+                  labelId="developer-label"
+                  value={assignedTo}
+                  onChange={(e) => setAssignedTo(e.target.value)}
+                  label="Assigned To"
+                  className="custom-select"
+                  disabled={props.isInserting}
+                >
+                  <MenuItem value="">None</MenuItem>
+                  {props.developers && props.developers.map(dev => (
+                    <MenuItem key={dev.id} value={dev.id}>
+                      {dev.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </div>
           </div>
         )}
         
-        <Button
-          className="AddButton"
-          variant="contained"
-          disabled={props.isInserting}
-          onClick={!props.isInserting ? handleSubmit : null}
-          type="submit"
-          size="small"
-        >
-          {props.isInserting ? 'Adding…' : 'Add'}
-        </Button>
+        <div className="form-row">
+          <Button 
+            variant="contained" 
+            type="submit" 
+            className="submit-button" 
+            disabled={props.isInserting || !item.trim()}
+          >
+            {props.isInserting ? 'Adding...' : 'Add Task'}
+          </Button>
+        </div>
       </form>
     </div>
   );

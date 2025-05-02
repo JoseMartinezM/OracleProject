@@ -23,7 +23,6 @@ function GitHubIntegration({ todos }) {
   
   // Estados para mensajes de retroalimentación
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
-  const [debugInfo, setDebugInfo] = useState('');
   
   // Parámetros GitHub para la API
   const owner = 'antoineganem';
@@ -38,38 +37,30 @@ function GitHubIntegration({ todos }) {
   const fetchBranches = async () => {
     setLoading(true);
     setError(null);
-    setDebugInfo('Fetching branches...');
     
     try {
       const url = `${GITHUB_GET_BRANCHES}?owner=${owner}&repo=${repo}`;
-      setDebugInfo(prev => `${prev}\nRequest URL: ${url}`);
       
       const response = await fetch(url);
-      
-      setDebugInfo(prev => `${prev}\nResponse status: ${response.status} ${response.statusText}`);
       
       if (!response.ok) {
         throw new Error(`Error fetching branches: ${response.status} ${response.statusText}`);
       }
       
       const responseText = await response.text();
-      setDebugInfo(prev => `${prev}\nResponse body: ${responseText.substring(0, 200)}...`);
       
       // Intentar parsear el JSON
       let data;
       try {
         data = JSON.parse(responseText);
       } catch (parseError) {
-        setDebugInfo(prev => `${prev}\nError parsing JSON: ${parseError.message}`);
         throw new Error('Invalid JSON response from server');
       }
       
-      setDebugInfo(prev => `${prev}\nBranches fetched: ${data.length || 0}`);
       setBranches(data);
     } catch (err) {
       console.error('Error fetching branches:', err);
       setError(err);
-      setDebugInfo(prev => `${prev}\nError: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -102,9 +93,6 @@ function GitHubIntegration({ todos }) {
     setLoading(true);
     setError(null);
     
-    // Mostrar exactamente qué estamos enviando para depuración
-    console.log("Branch name being sent:", branchName);
-    
     const requestData = {
       owner: owner,
       repo: repo,
@@ -112,11 +100,6 @@ function GitHubIntegration({ todos }) {
       baseBranch: "main", 
       taskId: selectedTask.id
     };
-    
-    // Debug info para verificar los datos de la solicitud
-    setDebugInfo(`Creating branch: ${branchName}\nRequest data: ${JSON.stringify(requestData, null, 2)}`);
-    console.log('Sending request to create branch:', requestData);
-    console.log('Endpoint URL:', GITHUB_CREATE_BRANCH);
     
     try {
       const response = await fetch(GITHUB_CREATE_BRANCH, {
@@ -127,22 +110,14 @@ function GitHubIntegration({ todos }) {
         body: JSON.stringify(requestData)
       });
       
-      // Capturar la respuesta completa para depuración
+      // Capturar la respuesta completa
       const responseText = await response.text();
-      
-      setDebugInfo(prev => `${prev}\nResponse status: ${response.status} ${response.statusText}`);
-      setDebugInfo(prev => `${prev}\nResponse body: ${responseText}`);
-      
-      console.log('Response from server:', response.status, response.statusText);
-      console.log('Response body:', responseText);
       
       // Intentar parsear la respuesta como JSON si es posible
       let jsonResponse = null;
       try {
         if (responseText && responseText.trim().startsWith('{')) {
           jsonResponse = JSON.parse(responseText);
-          console.log('Parsed JSON response:', jsonResponse);
-          setDebugInfo(prev => `${prev}\nParsed response: ${JSON.stringify(jsonResponse, null, 2)}`);
         }
       } catch (parseError) {
         console.log('Response is not JSON:', responseText);
@@ -153,8 +128,6 @@ function GitHubIntegration({ todos }) {
         // Crear un nuevo nombre con timestamp
         const timestamp = new Date().getTime().toString().slice(-6);
         const newBranchName = `${branchName}-${timestamp}`;
-        
-        setDebugInfo(prev => `${prev}\nBranch already exists. Retrying with: ${newBranchName}`);
         
         // Reintentar con el nuevo nombre
         const retryData = {
@@ -171,8 +144,6 @@ function GitHubIntegration({ todos }) {
         });
         
         const retryText = await retryResponse.text();
-        setDebugInfo(prev => `${prev}\nRetry response: ${retryResponse.status} ${retryResponse.statusText}`);
-        setDebugInfo(prev => `${prev}\nRetry body: ${retryText}`);
         
         if (!retryResponse.ok) {
           throw new Error(`Error creating branch on retry: ${retryResponse.status} - ${retryText}`);
@@ -210,7 +181,6 @@ function GitHubIntegration({ todos }) {
       
     } catch (err) {
       console.error('Error creating branch:', err);
-      setDebugInfo(prev => `${prev}\nError: ${err.message}`);
       
       // Mostrar error
       setError(err);
@@ -239,36 +209,10 @@ function GitHubIntegration({ todos }) {
     setNotification({ ...notification, open: false });
   };
   
-  // Para mostrar/ocultar información de depuración
-  const [showDebug, setShowDebug] = useState(true); // Activado por defecto para facilitar depuración
-  
   // Renderizado de los componentes
   return (
     <div>
       <h1>GITHUB INTEGRATION</h1>
-      
-      {/* Botón para mostrar/ocultar información de depuración */}
-      <div style={{ textAlign: 'right', marginBottom: '15px' }}>
-        <Button 
-          variant="outlined" 
-          size="small"
-          onClick={() => setShowDebug(!showDebug)}
-          style={{ 
-            backgroundColor: 'rgba(255, 255, 255, 0.07)',
-            color: 'rgba(255, 255, 255, 0.7)',
-            border: '1px solid rgba(255, 255, 255, 0.15)'
-          }}
-        >
-          {showDebug ? 'Hide Debug Info' : 'Show Debug Info'}
-        </Button>
-      </div>
-      
-      {showDebug && debugInfo && (
-        <div className="debug-info">
-          <h3>Debug Information</h3>
-          <pre>{debugInfo}</pre>
-        </div>
-      )}
       
       {error && (
         <div className="error-message">
@@ -386,17 +330,6 @@ function GitHubIntegration({ todos }) {
             The branch will be created from the repository's main branch.
             A timestamp has been added to the branch name to avoid conflicts.
           </p>
-          
-          {/* Mostrar información del endpoint para depuración */}
-          <div className="debug-endpoint-info">
-            <h4>Branch Creation Information</h4>
-            <p>Owner: {owner}</p>
-            <p>Repo: {repo}</p>
-            <p>Base Branch: main</p>
-            <p>New Branch Name: {branchName}</p>
-            <p>Task ID: {selectedTask?.id}</p>
-            <p>Will be sent as: {"{"} owner: '{owner}', repo: '{repo}', newBranchName: '{branchName}', baseBranch: 'main', taskId: {selectedTask?.id} {"}"}</p>
-          </div>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenCreateBranchDialog(false)} className="DeleteButton">Cancel</Button>
@@ -421,52 +354,6 @@ function GitHubIntegration({ todos }) {
           {notification.message}
         </Alert>
       </Snackbar>
-      
-      {/* Estilos adicionales para depuración */}
-      <style jsx>{`
-        .debug-info {
-          background-color: rgba(0, 0, 0, 0.7);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 4px;
-          padding: 10px;
-          margin-bottom: 20px;
-          overflow: auto;
-          max-height: 200px;
-        }
-        
-        .debug-info h3 {
-          margin-top: 0;
-          color: #C74634;
-          font-size: 16px;
-        }
-        
-        .debug-info pre {
-          color: rgba(255, 255, 255, 0.7);
-          font-family: monospace;
-          font-size: 12px;
-          white-space: pre-wrap;
-          word-break: break-all;
-        }
-        
-        .debug-endpoint-info {
-          margin-top: 15px;
-          padding: 10px;
-          background-color: rgba(0, 0, 0, 0.5);
-          border-radius: 4px;
-        }
-        
-        .debug-endpoint-info h4 {
-          margin-top: 0;
-          color: #C74634;
-          font-size: 14px;
-        }
-        
-        .debug-endpoint-info p {
-          margin: 5px 0;
-          font-size: 12px;
-          font-family: monospace;
-        }
-      `}</style>
     </div>
   );
 }

@@ -977,6 +977,102 @@ button.delete-task:hover {
   color: var(--oracle-red) !important;
 }
 
+/* Estilos mejorados para los selectores y menús desplegables */
+.filters select,
+.MuiSelect-select,
+.MuiInputBase-input,
+.MuiOutlinedInput-input {
+  background-color: var(--oracle-dark-grey) !important;
+  color: var(--oracle-white) !important;
+  border-color: var(--oracle-light-grey) !important;
+}
+
+.MuiOutlinedInput-notchedOutline {
+  border-color: var(--oracle-light-grey) !important;
+}
+
+.MuiInputLabel-root {
+  color: var(--oracle-light-grey) !important;
+}
+
+.MuiInputLabel-root.Mui-focused {
+  color: var(--oracle-red) !important;
+}
+
+.MuiSelect-icon {
+  color: var(--oracle-light-grey) !important;
+}
+
+/* Estilos específicos para el menú desplegable */
+.MuiMenu-paper,
+.MuiPopover-paper {
+  background-color: var(--oracle-dark) !important;
+  color: var(--oracle-white) !important;
+  border: 1px solid var(--oracle-light-grey) !important;
+}
+
+.MuiMenuItem-root {
+  background-color: var(--oracle-dark) !important;
+  color: var(--oracle-white) !important;
+  font-size: 0.9rem !important;
+  padding: 10px 16px !important;
+}
+
+.MuiMenuItem-root:hover {
+  background-color: var(--oracle-dark-grey) !important;
+}
+
+.MuiMenuItem-root.Mui-selected {
+  background-color: rgba(232, 0, 0, 0.2) !important;
+}
+
+.MuiMenuItem-root.Mui-selected:hover {
+  background-color: rgba(232, 0, 0, 0.3) !important;
+}
+
+.MuiPaper-root {
+  background-color: var(--oracle-dark) !important;
+  color: var(--oracle-white) !important;
+  border: 1px solid var(--oracle-light-grey);
+}
+
+/* Estilos para el select nativo */
+select option {
+  background-color: var(--oracle-dark) !important;
+  color: var(--oracle-white) !important;
+}
+
+.filter-group label {
+  color: var(--oracle-white);
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.filters {
+  background-color: var(--oracle-dark);
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  margin-right: 20px;
+}
+
+.filter-group select {
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--oracle-light-grey);
+  background-color: var(--oracle-dark-grey);
+  color: var(--oracle-white);
+  font-size: 0.9rem;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .App {
@@ -1144,4 +1240,279 @@ button.delete-task:hover {
     border: 1px solid #ccc;
     color: #333;
   }
+}
+
+/* Estilos para el selector de sprint */
+.sprint-selector-container {
+  background-color: var(--oracle-dark);
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.sprint-selector-container h2 {
+  margin-top: 0;
+  color: var(--oracle-white);
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+}
+
+.sprint-selector {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.sprint-select {
+  background-color: var(--oracle-dark-grey);
+  color: var(--oracle-white);
+  border-radius: 4px;
+}
+
+/* Estilos para la información del sprint */
+.sprint-info {
+  background-color: var(--oracle-dark-grey);
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid var(--oracle-red);
+}
+
+.sprint-info h2 {
+  margin-top: 0;
+  color: var(--oracle-white);
+  font-size: 1.5rem;
+}
+
+.sprint-info p {
+  color: var(--oracle-light-grey);
+  margin-bottom: 10px;
+}
+
+.sprint-dates {
+  display: flex;
+  justify-content: space-between;
+  color: var(--oracle-light-grey);
+  font-size: 0.9rem;
+}
+
+/* Estilos para el contenedor principal de tareas */
+.task-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Estilos para la sección de tareas sin sprint */
+.tasks-without-sprint {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--oracle-dark-grey);
+}
+
+.tasks-without-sprint .task-section-header h2 {
+  color: var(--oracle-light-grey);
+}
+
+/* Estilos para el botón de asignar a sprint */
+.AssignButton {
+  background-color: var(--oracle-blue) !important;
+  color: white !important;
+}
+
+.AssignButton:hover {
+  background-color: var(--oracle-dark-blue) !important;
+}
+
+/* Estilos para el formulario de nueva tarea */
+#newinputform {
+  background-color: var(--oracle-dark);
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.form-expanded {
+  margin-top: 15px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px;
+}
+
+.form-row {
+  margin-bottom: 15px;
+}
+
+.form-selects {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.submit-button {
+  background-color: var(--oracle-red) !important;
+  color: white !important;
+  padding: 10px 20px !important;
+  font-size: 1rem !important;
+  width: 100%;
+}
+
+.submit-button:hover {
+  background-color: var(--oracle-dark-red) !important;
+}
+
+/* Estilos para el spinner de carga pequeño */
+.loading-spinner-small {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: var(--oracle-red);
+  animation: spin 1s ease-in-out infinite;
+}
+
+/* Estilos mejorados para los selectores */
+.filters select,
+.MuiSelect-select,
+.MuiInputBase-input,
+.MuiOutlinedInput-input {
+  background-color: var(--oracle-dark-grey) !important;
+  color: var(--oracle-white) !important;
+  border-color: var(--oracle-light-grey) !important;
+}
+
+.MuiOutlinedInput-notchedOutline {
+  border-color: var(--oracle-light-grey) !important;
+}
+
+.MuiInputLabel-root {
+  color: var(--oracle-light-grey) !important;
+}
+
+.MuiInputLabel-root.Mui-focused {
+  color: var(--oracle-red) !important;
+}
+
+.MuiSelect-icon {
+  color: var(--oracle-light-grey) !important;
+}
+
+.MuiMenuItem-root {
+  background-color: var(--oracle-dark) !important;
+  color: var(--oracle-white) !important;
+}
+
+.MuiMenuItem-root:hover {
+  background-color: var(--oracle-dark-grey) !important;
+}
+
+.MuiPaper-root {
+  background-color: var(--oracle-dark) !important;
+  color: var(--oracle-white) !important;
+  border: 1px solid var(--oracle-light-grey);
+}
+
+.filter-group label {
+  color: var(--oracle-white);
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.filters {
+  background-color: var(--oracle-dark);
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  margin-right: 20px;
+}
+
+.filter-group select {
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--oracle-light-grey);
+  background-color: var(--oracle-dark-grey);
+  color: var(--oracle-white);
+  font-size: 0.9rem;
+}
+
+/* Estilos para el botón de crear nuevo sprint */
+.sprint-selector-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.sprint-selector {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.NewSprintButton {
+  background-color: var(--oracle-red) !important;
+  color: white !important;
+  align-self: flex-end;
+  margin-top: 10px !important;
+}
+
+.NewSprintButton:hover {
+  background-color: var(--oracle-dark-red) !important;
+}
+
+/* Estilos para el modal de creación de sprint */
+.modal-input,
+.modal-textarea {
+  width: 100%;
+  padding: 10px;
+  background-color: var(--oracle-dark-grey);
+  color: var(--oracle-white);
+  border: 1px solid var(--oracle-light-grey);
+  border-radius: 4px;
+  font-size: 1rem;
+  margin-top: 5px;
+}
+
+.modal-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.modal-input:focus,
+.modal-textarea:focus {
+  outline: none;
+  border-color: var(--oracle-red);
+}
+
+.create-sprint {
+  background-color: var(--oracle-red) !important;
+  color: white !important;
+}
+
+.create-sprint:hover {
+  background-color: var(--oracle-dark-red) !important;
+}
+
+/* Estilos para inputs de tipo date y number */
+input[type="date"],
+input[type="number"] {
+  background-color: var(--oracle-dark-grey);
+  color: var(--oracle-white);
+  border: 1px solid var(--oracle-light-grey);
+  border-radius: 4px;
+  padding: 8px;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
 }
