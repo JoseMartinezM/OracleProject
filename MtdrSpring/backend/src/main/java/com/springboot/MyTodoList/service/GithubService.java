@@ -1,7 +1,6 @@
 package com.springboot.MyTodoList.service;
 
 import org.springframework.context.annotation.Configuration;
-import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 
@@ -22,8 +21,7 @@ public class GithubService {
     
     
     public GithubService() {
-        Dotenv dotenv = Dotenv.load();
-        GITHUB_TOKEN = dotenv.get("GITHUB_TOKEN");
+        GITHUB_TOKEN = "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";
     }
 
     public String getGITHUB_TOKEN() {
