@@ -74,5 +74,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Build Docker image (context = repo root)
-        run: docker build -t my-app:latest .
+      - name: Change directory and build
+        run: |
+            cd MtdrSpring/backend
+            mvn clean install
+            run: docker build -t my-app:latest .
