@@ -1,0 +1,78 @@
+name: Code Quality CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-java:
+    name: Lint Java with Checkstyle
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Download Checkstyle
+        run: |
+          curl -L -o checkstyle.jar https://github.com/checkstyle/checkstyle/releases/download/checkstyle-10.12.4/checkstyle-10.12.4-all.jar
+          curl -L -o google_checks.xml https://raw.githubusercontent.com/checkstyle/checkstyle/master/src/main/resources/google_checks.xml
+
+      - name: Run Checkstyle on Spring Boot source
+        run: java -jar checkstyle.jar -c google_checks.xml MtdrSpring/backend/src/main/java
+
+  build-java:
+    name: Build Spring Boot App
+    runs-on: ubuntu-latest
+    needs: lint-java
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Build Spring Boot App with Maven
+        working-directory: MtdrSpring/backend
+        run: mvn clean install --no-transfer-progress
+
+  lint-js:
+    name: Lint JavaScript with Biome
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Biome
+        run: npm install -g @biomejs/biome
+
+      - name: Run Biome lint
+        run: biome lint .
+
+      - name: Run Biome format check
+        run: biome check .
+
+  docker-build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build Docker image (context = repo root)
+        run: docker build -t my-app:latest .
