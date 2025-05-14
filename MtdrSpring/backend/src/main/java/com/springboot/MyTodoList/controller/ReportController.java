@@ -74,4 +74,6 @@ public class ReportController {
         List<Map<String, Object>> summary = reportService.getUsersSummary();
         return new ResponseEntity<>(summary, HttpStatus.OK);
     }
+
+    
 }

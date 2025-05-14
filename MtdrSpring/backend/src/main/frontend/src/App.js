@@ -1,24 +1,290 @@
 // Modificación del archivo App.js principal
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import NewItem from './NewItem';
 import GitHubIntegration from './GitHubIntegration';
-import ReportsDashboard from './ReportsDashboard'; // Importamos el nuevo componente
+import ReportsDashboard from './ReportsDashboard';
 import { API_LIST, GITHUB_CREATE_BRANCH, GITHUB_GET_BRANCHES, API_SPRINTS, API_USERS, API_TASKS_BY_SPRINT } from './API';
-import { Button, TableBody, Modal, Box, Typography, IconButton, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { Button, TableBody, Modal, Box, Typography, IconButton, Select, MenuItem, FormControl, InputLabel, TextField } from '@mui/material';
 import Moment from 'react-moment';
 import CloseIcon from '@mui/icons-material/Close';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import './index.css';
-import { TextField, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 
+// Componente de Login
+function Login({ onLogin, loginError }) {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!username || !password) return;
+    
+    setIsLoading(true);
+    
+    try {
+      // Buscar usuario por nombre de usuario
+      const response = await fetch(`${API_USERS}/username/${username}`);
+      
+      if (!response.ok) {
+        throw new Error('Invalid credentials');
+      }
+      
+      const userData = await response.json();
+      
+      // Verificar contraseña (en un sistema real, esto se haría en el backend)
+      if (userData.password === password) {
+        // Guardar información en el localStorage
+        localStorage.setItem('currentUser', JSON.stringify({
+          id: userData.id,
+          username: userData.username,
+          name: userData.name,
+          role: userData.role
+        }));
+        
+        onLogin(userData);
+      } else {
+        throw new Error('Invalid credentials');
+      }
+    } catch (error) {
+      onLogin(null, error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="login-overlay">
+      <div className="login-container">
+        <div className="login-header">
+          <img 
+            src="https://imgs.search.brave.com/VP0I6z3w18_vEzuRoDlY0arRjFf9OdUsX3928ysRXmE/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9sb2dv/ZG93bmxvYWQub3Jn/L3dwLWNvbnRlbnQv/dXBsb2Fkcy8yMDE0/LzA0L29yYWNsZS1s/b2dvLTAucG5n" 
+            alt="Oracle Logo"
+          />
+          <h2>TODO App Login</h2>
+        </div>
+        
+        <form className="login-form" onSubmit={handleSubmit}>
+          <div className="login-input-group">
+            <input
+              type="text"
+              className="login-input"
+              placeholder="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div className="login-input-group">
+            <input
+              type="password"
+              className="login-input"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          
+          <button 
+            type="submit" 
+            className="login-button"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Logging in...' : 'Login'}
+          </button>
+          
+          {loginError && (
+            <div className="login-error">
+              {loginError}
+            </div>
+          )}
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// Modal para cambiar el estado de una tarea
+function StatusChangeModal({ open, onClose, task, onStatusChange }) {
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [actualHours, setActualHours] = useState('');
+  const actualHoursRef = useRef(null);
+
+  useEffect(() => {
+    if (task) {
+      setSelectedStatus(task.status || 'Pending');
+      setActualHours(task.actualHours || '');
+    }
+  }, [task]);
+
+  const handleStatusChange = (status) => {
+    setSelectedStatus(status);
+  };
+
+  const handleSubmit = () => {
+    // Validar que se ingresen horas reales cuando se completa una tarea
+    if (selectedStatus === 'Completed' && (!actualHours || actualHours <= 0)) {
+      if (actualHoursRef.current) {
+        actualHoursRef.current.focus();
+      }
+      return;
+    }
+
+    onStatusChange(selectedStatus, actualHours);
+    onClose();
+  };
+
+  // Si no hay tarea seleccionada, no renderizar nada
+  if (!task) return null;
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      aria-labelledby="status-change-modal"
+      aria-describedby="change the status of a task"
+    >
+      <Box sx={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '80%',
+        maxWidth: 400,
+        bgcolor: '#312D2A',
+        boxShadow: 24,
+        p: 4,
+        borderRadius: '8px',
+        color: 'white',
+        border: '1px solid rgba(255, 255, 255, 0.1)'
+      }}>
+        <div className="modal-header">
+          <Typography variant="h5" component="h2" className="modal-title">
+            Update Task Status
+          </Typography>
+          <IconButton 
+            aria-label="close" 
+            onClick={onClose}
+            sx={{ 
+              color: 'white',
+              position: 'absolute',
+              right: 8,
+              top: 8
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </div>
+
+        <Typography variant="body1" sx={{ mt: 2, mb: 3 }}>
+          Task: {task.description}
+        </Typography>
+
+        <div className="status-radio-group">
+          <div 
+            className={`status-radio-option ${selectedStatus === 'Pending' ? 'selected' : ''}`}
+            onClick={() => handleStatusChange('Pending')}
+          >
+            <input 
+              type="radio" 
+              name="status" 
+              value="Pending" 
+              checked={selectedStatus === 'Pending'} 
+              onChange={() => {}} 
+            />
+            <span>Pending</span>
+          </div>
+          <div 
+            className={`status-radio-option ${selectedStatus === 'In Progress' ? 'selected' : ''}`}
+            onClick={() => handleStatusChange('In Progress')}
+          >
+            <input 
+              type="radio" 
+              name="status" 
+              value="In Progress" 
+              checked={selectedStatus === 'In Progress'} 
+              onChange={() => {}} 
+            />
+            <span>In Progress</span>
+          </div>
+          <div 
+            className={`status-radio-option ${selectedStatus === 'In Review' ? 'selected' : ''}`}
+            onClick={() => handleStatusChange('In Review')}
+          >
+            <input 
+              type="radio" 
+              name="status" 
+              value="In Review" 
+              checked={selectedStatus === 'In Review'} 
+              onChange={() => {}} 
+            />
+            <span>In Review</span>
+          </div>
+          <div 
+            className={`status-radio-option ${selectedStatus === 'Completed' ? 'selected' : ''}`}
+            onClick={() => handleStatusChange('Completed')}
+          >
+            <input 
+              type="radio" 
+              name="status" 
+              value="Completed" 
+              checked={selectedStatus === 'Completed'} 
+              onChange={() => {}} 
+            />
+            <span>Completed</span>
+          </div>
+        </div>
+
+        {selectedStatus === 'Completed' && (
+          <div className="actual-hours-container">
+            <label className="actual-hours-label">
+              <AccessTimeIcon fontSize="small" style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+              Actual Hours Worked:
+            </label>
+            <input
+              type="number"
+              className="actual-hours-input"
+              value={actualHours}
+              onChange={(e) => setActualHours(e.target.value)}
+              min="0.25"
+              step="0.25"
+              placeholder="Enter actual hours worked"
+              ref={actualHoursRef}
+            />
+          </div>
+        )}
+
+        <div className="status-action-buttons">
+          <button className="cancel-status-button" onClick={onClose}>
+            Cancel
+          </button>
+          <button className="update-status-button" onClick={handleSubmit}>
+            Update Status
+          </button>
+        </div>
+      </Box>
+    </Modal>
+  );
+}
+
+// Componente principal
 function App() {
+    // Estados de autenticación
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [currentUser, setCurrentUser] = useState(null);
+    const [loginError, setLoginError] = useState(null);
+    
     // Estados de la aplicación
     const [isLoading, setLoading] = useState(false);
     const [isInserting, setInserting] = useState(false);
     const [items, setItems] = useState([]);
     const [error, setError] = useState();
     
-    // Estado para la pestaña activa - Añadimos 'reports' como opción
-    const [activeTab, setActiveTab] = useState('tasks'); // 'tasks', 'github' o 'reports'
+    // Estado para la pestaña activa
+    const [activeTab, setActiveTab] = useState('tasks');
     
     // Estado para filtros
     const [priorityFilter, setPriorityFilter] = useState('All');
@@ -35,6 +301,10 @@ function App() {
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedTask, setSelectedTask] = useState(null);
 
+    // Estado para el modal de cambio de estado
+    const [statusModalOpen, setStatusModalOpen] = useState(false);
+    const [taskForStatusChange, setTaskForStatusChange] = useState(null);
+
     // Estados para el modal de creación de sprint
     const [newSprintModalOpen, setNewSprintModalOpen] = useState(false);
     const [newSprintName, setNewSprintName] = useState('');
@@ -42,61 +312,41 @@ function App() {
     const [newSprintStartDate, setNewSprintStartDate] = useState('');
     const [newSprintDuration, setNewSprintDuration] = useState(2);
     const [isCreatingSprint, setIsCreatingSprint] = useState(false);
+    
+    // Comprobar si el usuario es desarrollador
+    const isDeveloper = currentUser?.role === 'Developer';
 
-    // Estados pata la autenticacion
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [currentUser, setCurrentUser] = useState({});
-    const [loginOpen, setLoginOpen] = useState(true);
-    const [loginData, setLoginData] = useState({
-        username: '',
-        password: ''
-    });
-    const [loginError, setLoginError] = useState('');
-
-    // Login handler
-    const handleLogin = async () => {
-      try {
-          setLoginError('');
-          const response = await fetch('/api/users/username/' + loginData.username);
-          if (response.ok) {
-              const user = await response.json();
-              if (user.password === loginData.password) {
-                  setIsAuthenticated(true);
-                  setCurrentUser({
-                      ID: user.ID,
-                      username: user.username,
-                      role: user.role,
-                      name: user.name
-                  });
-                  setLoginOpen(false);
-              } else {
-                  setLoginError('Invalid password');
-              }
-          } else {
-              setLoginError('User not found');
-          }
-      } catch (error) {
-          setLoginError('Login failed');
-          console.error('Login error:', error);
+    // Función para manejar el login
+    const handleLogin = (user, error = null) => {
+      if (user) {
+        setCurrentUser(user);
+        setIsAuthenticated(true);
+        setLoginError(null);
+      } else {
+        setLoginError(error);
       }
     };
-
-  // Logout handler
-  const handleLogout = () => {
+    
+    // Función para manejar el logout
+    const handleLogout = () => {
+      localStorage.removeItem('currentUser');
+      setCurrentUser(null);
       setIsAuthenticated(false);
-      setCurrentUser({});
-      setLoginOpen(true);
-      setLoginData({ username: '', password: '' });
-  };
-
-  // Update login form data
-  const handleLoginChange = (e) => {
-      const { name, value } = e.target;
-      setLoginData(prev => ({
-          ...prev,
-          [name]: value
-      }));
-  };
+    };
+    
+    // Verificar si hay un usuario en localStorage al cargar la página
+    useEffect(() => {
+      const storedUser = localStorage.getItem('currentUser');
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          setCurrentUser(parsedUser);
+          setIsAuthenticated(true);
+        } catch (error) {
+          localStorage.removeItem('currentUser');
+        }
+      }
+    }, []);
 
     // Función para abrir el modal con la tarea seleccionada
     const openTaskModal = (task) => {
@@ -107,6 +357,18 @@ function App() {
     // Función para cerrar el modal
     const closeTaskModal = () => {
         setModalOpen(false);
+    };
+
+    // Función para abrir el modal de cambio de estado
+    const openStatusModal = (task) => {
+      setTaskForStatusChange(task);
+      setStatusModalOpen(true);
+    };
+
+    // Función para cerrar el modal de cambio de estado
+    const closeStatusModal = () => {
+      setStatusModalOpen(false);
+      setTaskForStatusChange(null);
     };
 
     // Funciones para el modal de creación de sprint
@@ -153,7 +415,8 @@ function App() {
         name: newSprintName,
         description: newSprintDescription,
         startDate: newSprintStartDate,
-        endDate: endDate
+        endDate: endDate,
+        createdBy: currentUser?.id || null
       };
       
       fetch(API_SPRINTS, {
@@ -337,7 +600,9 @@ function App() {
                 assignedTo: item.assignedTo,
                 createdBy: item.createdBy,
                 isArchived: item.isArchived,
-                sprintId: item.sprintId
+                sprintId: item.sprintId,
+                estimatedHours: item.estimatedHours,
+                actualHours: item.actualHours
               })));
               
               // Cargar tareas sin sprint
@@ -411,12 +676,6 @@ function App() {
     };
 
     function deleteItem(deleteId) {
-      // First check if the current user is the creator or a manager
-      const taskToDelete = items.find(item => item.id === deleteId);
-      if (currentUser.role !== 'Manager' && taskToDelete.createdBy !== currentUser.ID) {
-          setError(new Error('Only managers or task creators can delete tasks'));
-          return;
-      }
       fetch(`${API_LIST}/${deleteId}`, {
         method: 'DELETE',
       })
@@ -442,11 +701,56 @@ function App() {
       );
     }
     
-    function toggleDone(event, id, description, done) {
-      event.stopPropagation(); // Evitar que se abra el modal
-      modifyItem(id, description, done).then(
-        (result) => { reloadOneItem(id); },
-        (error) => { setError(error); }
+    // Función para cambiar el estado de una tarea conservando su prioridad
+    function handleStatusChange(task, newStatus, actualHours = null) {
+      // Crear el objeto con los datos a actualizar
+      const updateData = {
+        status: newStatus
+      };
+      
+      // Si hay horas reales y el estado es "Completed", actualizar las horas reales
+      if (actualHours && newStatus === 'Completed') {
+        updateData.actualHours = parseFloat(actualHours);
+      }
+      
+      // Actualizar el estado de la tarea
+      fetch(`${API_LIST}/${task.id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updateData)
+      })
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error('Failed to update task status');
+        }
+      })
+      .then(
+        (result) => {
+          // Si se actualizaron las horas reales, actualizar la tarea completa
+          if (actualHours && newStatus === 'Completed') {
+            return fetch(`${API_LIST}/${task.id}/actual-hours`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ hours: parseFloat(actualHours) })
+            });
+          }
+          return Promise.resolve();
+        }
+      )
+      .then(
+        (result) => {
+          // Recargar la tarea para ver los cambios
+          reloadOneItem(task.id);
+        },
+        (error) => {
+          setError(error);
+        }
       );
     }
     
@@ -472,7 +776,9 @@ function App() {
                  'assignedTo': result.assignedTo,
                  'createdBy': result.createdBy,
                  'isArchived': result.isArchived,
-                 'creation_ts': result.creation_ts
+                 'creation_ts': result.creation_ts,
+                 'estimatedHours': result.estimatedHours,
+                 'actualHours': result.actualHours
                 } : x));
             setItems(updatedItems);
             
@@ -486,6 +792,7 @@ function App() {
           });
     }
     
+    // Deprecado: Este método conserva prioridad, pero ahora usamos handleStatusChange
     function modifyItem(id, description, done) {
       // Encuentra el item actual para preservar otros campos
       const currentItem = items.find(item => item.id === id);
@@ -494,7 +801,8 @@ function App() {
       var data = {
         "description": description, 
         "done": done,
-        "status": done ? "Completed" : (currentItem.status === "Completed" ? "In Progress" : currentItem.status)
+        "status": done ? "Completed" : (currentItem.status === "Completed" ? "In Progress" : currentItem.status),
+        "priority": currentItem.priority // Preservamos la prioridad
       };
       
       return fetch(`${API_LIST}/${id}`, {
@@ -513,32 +821,6 @@ function App() {
       });
     }
     
-    function updateStatus(event, id, newStatus) {
-      event.stopPropagation(); // Evitar que se abra el modal
-      fetch(`${API_LIST}/${id}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ status: newStatus })
-      })
-      .then(response => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          throw new Error('Failed to update status');
-        }
-      })
-      .then(
-        (result) => {
-          reloadOneItem(id);
-        },
-        (error) => {
-          setError(error);
-        }
-      );
-    }
-
     function updateTaskFromModal(id, updatedTask) {
       fetch(`${API_LIST}/${id}`, {
         method: 'PUT',
@@ -566,96 +848,105 @@ function App() {
     }
     
     useEffect(() => {
-      // Cargar sprints y desarrolladores al iniciar
-      loadSprints();
-      loadDevelopers();
-      
-      // Cargar todas las tareas inicialmente
-      setLoading(true);
-      fetch(API_LIST)
-        .then(response => {
-          if (response.ok) {
-            return response.json();
-          } else {
-            throw new Error('Something went wrong ...');
-          }
-        })
-        .then(
-          (result) => {
-            setLoading(false);
-            // Adaptando al nuevo formato de datos
-            setItems(result.map(item => ({
-              id: item.id,
-              description: item.description,
-              done: item.done,
-              createdAt: item.creation_ts,
-              status: item.status || 'Pending',
-              priority: item.priority || 'Medium',
-              steps: item.steps || '',
-              assignedTo: item.assignedTo,
-              createdBy: item.createdBy,
-              isArchived: item.isArchived,
-              sprintId: item.sprintId
-            })));
-            
-            // Cargar tareas sin sprint
-            loadTasksWithoutSprint();
-          },
-          (error) => {
-            setLoading(false);
-            setError(error);
-          });
-    }, []);
-    
-    // Example modification to addItem function
-function addItem(text, steps, priority) {
-  if (!currentUser?.ID) {
-    setError(new Error('User not authenticated'));
-    return;
-  }
-  setInserting(true);
-  
-  const currentTimestamp = new Date().toISOString();
-  
-  var data = {
-      description: text,
-      done: false,
-      status: "Pending",
-      priority: priority,
-      steps: steps || '',
-      creation_ts: currentTimestamp,
-      createdBy: currentUser.ID // Add the current user's ID
-  };
-  
-  fetch(API_LIST, {
-      method: 'POST',
-      headers: {
-          'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data),
-  })
-  .then((response) => {
-      if (response.ok) {
-          return response;
-      } else {
-          throw new Error('Something went wrong ...');
+      // Solo cargar datos si el usuario está autenticado
+      if (isAuthenticated) {
+        // Cargar sprints y desarrolladores al iniciar
+        loadSprints();
+        loadDevelopers();
+        
+        // Cargar todas las tareas inicialmente
+        setLoading(true);
+        fetch(API_LIST)
+          .then(response => {
+            if (response.ok) {
+              return response.json();
+            } else {
+              throw new Error('Something went wrong ...');
+            }
+          })
+          .then(
+            (result) => {
+              setLoading(false);
+              // Adaptando al nuevo formato de datos
+              setItems(result.map(item => ({
+                id: item.id,
+                description: item.description,
+                done: item.done,
+                createdAt: item.creation_ts,
+                status: item.status || 'Pending',
+                priority: item.priority || 'Medium',
+                steps: item.steps || '',
+                assignedTo: item.assignedTo,
+                createdBy: item.createdBy,
+                isArchived: item.isArchived,
+                sprintId: item.sprintId,
+                estimatedHours: item.estimatedHours,
+                actualHours: item.actualHours
+              })));
+              
+              // Cargar tareas sin sprint
+              loadTasksWithoutSprint();
+            },
+            (error) => {
+              setLoading(false);
+              setError(error);
+            });
       }
-  })
-  .then(
-      (result) => {
+    }, [isAuthenticated]);
+
+    function addItem(text, steps, priority, sprintId, assignedTo, estimatedHours) {
+      setInserting(true);
+      
+      // Obtener la fecha y hora actual
+      const currentTimestamp = new Date().toISOString();
+      
+      // Si el usuario es developer, auto-asignar la tarea a sí mismo
+      const taskAssignedTo = isDeveloper ? currentUser.id : assignedTo;
+      
+      var data = {
+        description: text,
+        done: false,
+        status: "Pending", // Siempre comenzar en Pending
+        priority: priority,
+        steps: steps || '',
+        creation_ts: currentTimestamp,
+        sprintId: sprintId || null,
+        assignedTo: taskAssignedTo,
+        createdBy: currentUser?.id || null, // Asignar el creador como el usuario actual
+        estimatedHours: estimatedHours || null
+      };
+      
+      fetch(API_LIST, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data),
+      }).then((response) => {
+        if (response.ok) {
+          return response;
+        } else {
+          throw new Error('Something went wrong ...');
+        }
+      }).then(
+        (result) => {
+          // Obtenemos la ubicación del nuevo recurso
           var id = result.headers.get('location');
           
+          // Creamos un nuevo item con los datos disponibles
           var newItem = {
-              id: id, 
-              description: text, 
-              done: false,
-              status: "Pending",
-              priority: priority,
-              steps: steps || '',
-              createdAt: currentTimestamp,
-              assignedTo: null,
-              createdBy: currentUser.ID, // Add the current user's ID
-              isArchived: 0
+            id: id, 
+            description: text, 
+            done: false,
+            status: "Pending",
+            priority: priority,
+            steps: steps || '',
+            createdAt: currentTimestamp,
+            assignedTo: taskAssignedTo,
+            createdBy: currentUser?.id || null,
+            isArchived: 0,
+            sprintId: sprintId || null,
+            estimatedHours: estimatedHours || null
           };
           
           // Si hay un sprint seleccionado y la tarea pertenece a ese sprint, la agregamos a la lista
@@ -673,21 +964,29 @@ function addItem(text, steps, priority) {
           }
           
           setInserting(false);
-      },
-      (error) => {
+        },
+        (error) => {
           setInserting(false);
           setError(error);
-      }
-  );
-}
+        }
+      );
+    }
     
     // Filtrado por prioridad
     const filteredItems = items.filter(item => {
+      // Filtro por prioridad
       let priorityMatch = priorityFilter === 'All' || item.priority === priorityFilter;
-      return priorityMatch;
+      
+      // Para desarrolladores, solo mostrar tareas asignadas a ellos
+      let assigneeMatch = true;
+      if (isDeveloper) {
+        assigneeMatch = item.assignedTo === currentUser.id;
+      }
+      
+      return priorityMatch && assigneeMatch;
     });
     
-    // Agrupar por estado en lugar de por "done"
+    // Agrupar por estado
     const pendingItems = filteredItems.filter(item => item.status === 'Pending');
     const inProgressItems = filteredItems.filter(item => item.status === 'In Progress');
     const inReviewItems = filteredItems.filter(item => item.status === 'In Review');
@@ -711,6 +1010,15 @@ function addItem(text, steps, priority) {
         <tr key={item.id} onClick={() => openTaskModal(item)} className="task-row">
           <td className="description">
             <div>{item.description}</div>
+            {item.estimatedHours && (
+              <div className="task-hours">
+                <AccessTimeIcon fontSize="small" style={{ marginRight: '4px', verticalAlign: 'middle', fontSize: '14px' }} />
+                <span>Est: {item.estimatedHours}h</span>
+                {item.actualHours && (
+                  <span className="actual-hours"> / Act: {item.actualHours}h</span>
+                )}
+              </div>
+            )}
           </td>
           <td className="status-priority">
             <span className={`priority priority-${item.priority?.toLowerCase()}`}>
@@ -721,29 +1029,33 @@ function addItem(text, steps, priority) {
             {item.createdAt && <Moment format="MMM Do HH:mm">{item.createdAt}</Moment>}
           </td>
           <td onClick={(e) => e.stopPropagation()}>
-            {item.status !== 'Completed' ? (
+            {/* Para usuarios no desarrolladores o para developers que son asignados a esta tarea */}
+            {(!isDeveloper || (isDeveloper && item.assignedTo === currentUser.id)) && (
               <Button 
                 variant="contained" 
-                className="DoneButton" 
-                onClick={(event) => toggleDone(event, item.id, item.description, true)} 
+                className="StatusButton" 
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setTaskForStatusChange(item);
+                  setStatusModalOpen(true);
+                }} 
                 size="small"
               >
-                Done
-              </Button>
-            ) : (
-              <Button 
-                variant="contained" 
-                className="DeleteButton" 
-                onClick={() => deleteItem(item.id)} 
-                size="small"
-              >
-                Delete
+                Status
               </Button>
             )}
           </td>
         </tr>
       ));
     };
+    
+    // Filtrado de tareas sin sprint (para desarrolladores, mostrar solo sus tareas)
+    const filteredTasksWithoutSprint = tasksWithoutSprint.filter(item => {
+      if (isDeveloper) {
+        return item.assignedTo === currentUser.id;
+      }
+      return true;
+    });
     
     // Estilos para el modal
     const modalStyle = {
@@ -763,67 +1075,39 @@ function addItem(text, steps, priority) {
       border: '1px solid rgba(255, 255, 255, 0.1)'
     };
 
+    // Si el usuario no está autenticado, mostrar el componente de login
+    if (!isAuthenticated) {
+      return <Login onLogin={handleLogin} loginError={loginError} />;
+    }
+
     return (
       <div className="App">
-        {/* Login Dialog - shown when not authenticated */}
-        {!isAuthenticated && (
-          <Dialog open={loginOpen} onClose={() => setLoginOpen(false)}>
-            <DialogTitle>Login</DialogTitle>
-            <DialogContent>
-              <TextField
-                autoFocus
-                margin="dense"
-                name="username"
-                type="text"
-                label="Username"
-                fullWidth
-                variant='standard'
-                value={loginData.username}
-                onChange={handleLoginChange}
-              />
-              <TextField
-                margin="dense"
-                name="password"
-                label="Password"
-                type="password"
-                fullWidth
-                variant="standard"
-                value={loginData.password}
-                onChange={handleLoginChange}
-              />
-              {loginError && <p className="error-message">{loginError}</p>}
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={handleLogin}>Login</Button>
-              </DialogActions>
-            </Dialog>
-        )}
-
-        {/*Only show app content if authenticated*/}
-        <>
-          {/* Add logout button at the top */}
-          <div style={{ position: 'absolute', top: '10px', right: '10px' }}>
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={handleLogout}
-            >
-              Logout ({currentUser?.username || 'User'})
-            </Button>
-          </div>
-
-          {/* Oracle Logo (tamaño aumentado) */}
-          <img 
-            src="https://imgs.search.brave.com/VP0I6z3w18_vEzuRoDlY0arRjFf9OdUsX3928ysRXmE/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9sb2dv/ZG93bmxvYWQub3Jn/L3dwLWNvbnRlbnQv/dXBsb2Fkcy8yMDE0/LzA0L29yYWNsZS1s/b2dvLTAucG5n" 
-            alt="Oracle Logo" 
-            className="oracle-logo" 
-            style={{ height: "180px" }} // Hacer el logo más grande
-          />
-        </>
-
+        {/* Botón de logout en la esquina superior derecha */}
+        <div className="logout-container">
+          <button className="logout-button" onClick={handleLogout}>
+            <ExitToAppIcon /> Logout
+          </button>
+        </div>
+        
+        {/* Oracle Logo (tamaño aumentado) */}
+        <img 
+          src="https://imgs.search.brave.com/VP0I6z3w18_vEzuRoDlY0arRjFf9OdUsX3928ysRXmE/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9sb2dv/ZG93bmxvYWQub3Jn/L3dwLWNvbnRlbnQv/dXBsb2Fkcy8yMDE0/LzA0L29yYWNsZS1s/b2dvLTAucG5n" 
+          alt="Oracle Logo" 
+          className="oracle-logo" 
+          style={{ height: "180px" }} // Hacer el logo más grande
+        />
+        
         <h1>TODO LIST</h1>
         
-        {/* Pestañas de navegación - Añadimos la pestaña de Reportes */}
+        {/* Mostrar el nombre del usuario actual y su rol */}
+        {currentUser && (
+          <div className="welcome-user">
+            Welcome, {currentUser.name || currentUser.username}
+            <span className="user-role"> ({currentUser.role})</span>
+          </div>
+        )}
+        
+        {/* Pestañas de navegación - Sólo mostrar las pestañas permitidas */}
         <div className="app-tabs">
           <div 
             className={`app-tab ${activeTab === 'tasks' ? 'active' : ''}`}
@@ -831,18 +1115,24 @@ function addItem(text, steps, priority) {
           >
             Tasks
           </div>
-          <div 
-            className={`app-tab ${activeTab === 'github' ? 'active' : ''}`}
-            onClick={() => setActiveTab('github')}
-          >
-            GitHub Integration
-          </div>
-          <div 
-            className={`app-tab ${activeTab === 'reports' ? 'active' : ''}`}
-            onClick={() => setActiveTab('reports')}
-          >
-            KPI Reports
-          </div>
+          
+          {/* Sólo mostrar GitHub y KPI Reports para no desarrolladores */}
+          {!isDeveloper && (
+            <>
+              <div 
+                className={`app-tab ${activeTab === 'github' ? 'active' : ''}`}
+                onClick={() => setActiveTab('github')}
+              >
+                GitHub Integration
+              </div>
+              <div 
+                className={`app-tab ${activeTab === 'reports' ? 'active' : ''}`}
+                onClick={() => setActiveTab('reports')}
+              >
+                KPI Reports
+              </div>
+            </>
+          )}
         </div>
         
         {/* Contenido condicional según la pestaña activa */}
@@ -872,14 +1162,18 @@ function addItem(text, steps, priority) {
                 </FormControl>
                 {loadingSprints && <div className="loading-spinner-small"></div>}
               </div>
-              <Button 
-                variant="contained" 
-                className="NewSprintButton" 
-                onClick={openNewSprintModal} 
-                size="small"
-              >
-                Create New Sprint
-              </Button>
+              
+              {/* Sólo mostrar botón para crear sprints a no desarrolladores */}
+              {!isDeveloper && (
+                <Button 
+                  variant="contained" 
+                  className="NewSprintButton" 
+                  onClick={openNewSprintModal} 
+                  size="small"
+                >
+                  Create New Sprint
+                </Button>
+              )}
             </div>
 
             <NewItem 
@@ -887,6 +1181,8 @@ function addItem(text, steps, priority) {
               isInserting={isInserting} 
               sprints={sprints} 
               developers={developers}
+              currentUser={currentUser}
+              isDeveloper={isDeveloper}
             />
             
             { error &&
@@ -974,22 +1270,31 @@ function addItem(text, steps, priority) {
                 {/* Tasks Without Sprint Section */}
                 <div className="tasks-without-sprint">
                   <div className="task-section-header">
-                    <h2>Tasks Without Sprint <span className="task-count">{tasksWithoutSprint.length}</span></h2>
+                    <h2>Tasks Without Sprint <span className="task-count">{filteredTasksWithoutSprint.length}</span></h2>
                   </div>
                   
                   <table className="itemlist">
                     <TableBody>
-                      {tasksWithoutSprint.length === 0 ? (
+                      {filteredTasksWithoutSprint.length === 0 ? (
                         <tr>
                           <td colSpan="4" className="empty-message">
                             No tasks without sprint.
                           </td>
                         </tr>
                       ) : (
-                        tasksWithoutSprint.map(item => (
+                        filteredTasksWithoutSprint.map(item => (
                           <tr key={item.id} onClick={() => openTaskModal(item)} className="task-row">
                             <td className="description">
                               <div>{item.description}</div>
+                              {item.estimatedHours && (
+                                <div className="task-hours">
+                                  <AccessTimeIcon fontSize="small" style={{ marginRight: '4px', verticalAlign: 'middle', fontSize: '14px' }} />
+                                  <span>Est: {item.estimatedHours}h</span>
+                                  {item.actualHours && (
+                                    <span className="actual-hours"> / Act: {item.actualHours}h</span>
+                                  )}
+                                </div>
+                              )}
                             </td>
                             <td className="status-priority">
                               <span className={`priority priority-${item.priority?.toLowerCase()}`}>
@@ -1000,7 +1305,7 @@ function addItem(text, steps, priority) {
                               {item.createdAt && <Moment format="MMM Do HH:mm">{item.createdAt}</Moment>}
                             </td>
                             <td onClick={(e) => e.stopPropagation()}>
-                              {selectedSprint && (
+                              {selectedSprint && !isDeveloper && (
                                 <Button 
                                   variant="contained" 
                                   className="AssignButton" 
@@ -1011,6 +1316,20 @@ function addItem(text, steps, priority) {
                                   size="small"
                                 >
                                   Assign to Sprint
+                                </Button>
+                              )}
+                              {(!isDeveloper || (isDeveloper && item.assignedTo === currentUser.id)) && !selectedSprint && (
+                                <Button 
+                                  variant="contained" 
+                                  className="StatusButton" 
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    setTaskForStatusChange(item);
+                                    setStatusModalOpen(true);
+                                  }} 
+                                  size="small"
+                                >
+                                  Status
                                 </Button>
                               )}
                             </td>
@@ -1093,6 +1412,26 @@ function addItem(text, steps, priority) {
                       </span>
                     </div>
 
+                    {/* Mostrar las horas estimadas */}
+                    {selectedTask.estimatedHours && (
+                      <div className="modal-meta-item">
+                        <Typography variant="body2" className="modal-meta-label">Estimated Hours</Typography>
+                        <Typography variant="body2" className="modal-meta-value">
+                          {selectedTask.estimatedHours}h
+                        </Typography>
+                      </div>
+                    )}
+
+                    {/* Mostrar las horas reales */}
+                    {selectedTask.actualHours && (
+                      <div className="modal-meta-item">
+                        <Typography variant="body2" className="modal-meta-label">Actual Hours</Typography>
+                        <Typography variant="body2" className="modal-meta-value">
+                          {selectedTask.actualHours}h
+                        </Typography>
+                      </div>
+                    )}
+
                     {/* Mostrar el sprint asignado */}
                     <div className="modal-meta-item">
                       <Typography variant="body2" className="modal-meta-label">Sprint</Typography>
@@ -1114,7 +1453,7 @@ function addItem(text, steps, priority) {
                       <div className="modal-meta-item">
                         <Typography variant="body2" className="modal-meta-label">Assigned To</Typography>
                         <Typography variant="body2" className="modal-meta-value">
-                          User ID: {selectedTask.assignedTo}
+                          {developers.find(d => d.id === selectedTask.assignedTo)?.name || `User ID: ${selectedTask.assignedTo}`}
                         </Typography>
                       </div>
                     )}
@@ -1130,37 +1469,23 @@ function addItem(text, steps, priority) {
                   </div>
 
                   <div className="modal-actions">
-                    {selectedTask.status !== "Completed" && (
+                    {/* Botón para cambiar estado disponible solo para no desarrolladores o para developers asignados a esta tarea */}
+                    {(!isDeveloper || (isDeveloper && selectedTask.assignedTo === currentUser.id)) && (
                       <Button 
                         variant="contained" 
                         className="modal-action-button move-next"
-                        onClick={(e) => {
-                          let nextStatus;
-                          switch(selectedTask.status) {
-                            case "Pending":
-                              nextStatus = "In Progress";
-                              break;
-                            case "In Progress":
-                              nextStatus = "In Review";
-                              break;
-                            case "In Review":
-                              nextStatus = "Completed";
-                              break;
-                            default:
-                              nextStatus = "Completed";
-                          }
-                          updateStatus(e, selectedTask.id, nextStatus);
+                        onClick={() => {
+                          setTaskForStatusChange(selectedTask);
+                          setStatusModalOpen(true);
+                          closeTaskModal();
                         }}
                       >
-                        Move to {
-                          selectedTask.status === "Pending" ? "In Progress" :
-                          selectedTask.status === "In Progress" ? "In Review" :
-                          selectedTask.status === "In Review" ? "Completed" : "Next"
-                        }
+                        Change Status
                       </Button>
                     )}
                     
-                    {selectedTask.status === "Completed" && (
+                    {/* Botón para eliminar disponible solo para no desarrolladores */}
+                    {!isDeveloper && selectedTask.status === "Completed" && (
                       <Button 
                         variant="contained" 
                         className="modal-action-button delete-task"
@@ -1240,8 +1565,10 @@ function addItem(text, steps, priority) {
                 <input 
                   type="number" 
                   value={newSprintDuration} 
-                  onChange={(e) => setNewSprintDuration(e.target.value)} 
+                  onChange={(e) => setNewSprintDuration(Number(e.target.value))} 
                   className="modal-input"
+                  min="1"
+                  max="12"
                 />
               </div>
 
@@ -1258,6 +1585,18 @@ function addItem(text, steps, priority) {
             </div>
           </Box>
         </Modal>
+
+        {/* Modal para cambiar el estado de una tarea */}
+        <StatusChangeModal 
+          open={statusModalOpen}
+          onClose={closeStatusModal}
+          task={taskForStatusChange}
+          onStatusChange={(newStatus, actualHours) => {
+            if (taskForStatusChange) {
+              handleStatusChange(taskForStatusChange, newStatus, actualHours);
+            }
+          }}
+        />
       </div>
     );
 }
