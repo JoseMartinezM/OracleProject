@@ -3,10 +3,24 @@
 ## PASOS PARA EJECUTAR
 1. Navegar a la carpeta del backend: `cd ruta/a/MtdrSpring/backend`
 2. Ejecutar estos comandos en orden:
-   ```
-   mvn clean install
-   mvn spring-boot:run
-   ```
+
+mvn clean install
+mvn spring-boot:run
+
+## CONFIGURACIÓN PARA EJECUCIÓN LOCAL
+Para ejecutar el proyecto en entorno local, es necesario:
+
+1. Crear un archivo `.env` en la raíz del proyecto con las credenciales necesarias
+2. Modificar el path de la wallet en `application.properties` para que coincida con tu ubicación local
+
+### Configuración del archivo application.properties
+Ajusta la siguiente línea en el archivo application.properties:
+
+spring.datasource.url=jdbc:oracle:thin:@localdb_high?TNS_ADMIN=<TU_RUTA_A_LA_WALLET>
+
+Ejemplo:
+
+spring.datasource.url=jdbc:oracle:thin:@localdb_high?TNS_ADMIN=C:/Users/josem/OneDrive/Escritorio/OracleSprint2/Wallet_LocalDB
 
 ## CREDENCIALES Y DATOS DE CONFIGURACIÓN
 
@@ -29,4 +43,3 @@
 - ToDoUserTable = `Oracle123456!`
 
 ---
-
