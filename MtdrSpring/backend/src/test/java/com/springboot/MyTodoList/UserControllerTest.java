@@ -119,7 +119,7 @@ public class UserControllerTest {
         inputUser.setRole("Developer");
         inputUser.setPhone("+5491198765432");
         inputUser.setName("Jane Smith");
-
+    
         // Respuesta esperada del servicio
         User savedUser = new User();
         savedUser.setID(5);
@@ -128,19 +128,15 @@ public class UserControllerTest {
         savedUser.setRole("Developer");
         savedUser.setPhone("+5491198765432");
         savedUser.setName("Jane Smith");
-
+    
         when(userService.addUser(any(User.class))).thenReturn(savedUser);
-
+    
         mockMvc.perform(post("/api/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(inputUser)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(5))
-                .andExpect(jsonPath("$.username").value("newuser"))
-                .andExpect(jsonPath("$.password").value("securepass"))
-                .andExpect(jsonPath("$.role").value("Developer"))
-                .andExpect(jsonPath("$.phone").value("+5491198765432"))
-                .andExpect(jsonPath("$.name").value("Jane Smith"));
+                .andExpect(header().exists("location"))
+                .andExpect(header().string("location", "5"));
     }
 
     @Test

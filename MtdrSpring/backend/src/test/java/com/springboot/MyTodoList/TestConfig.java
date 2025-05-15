@@ -15,4 +15,6 @@ public class TestConfig {
         // Devuelve un mock de TelegramBotsApi para evitar la inicialización real
         return Mockito.mock(TelegramBotsApi.class);
     }
+    
+    // Removemos el bean TelegramClient que causaba el error
 }
