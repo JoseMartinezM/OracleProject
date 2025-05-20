@@ -151,7 +151,7 @@ function ReportsDashboard() {
     if (selectedSprint) {
       setLoading(true);
       
-      // Cargar tareas completadas
+      // Load completed tasks
       fetch(`${API_URL}/reports/sprint/${selectedSprint}/completed-tasks`)
         .then(response => {
           if (response.ok) {
@@ -187,7 +187,6 @@ function ReportsDashboard() {
         });
         
       // Fetch KPI data for all developers in the selected sprint
-      // Vamos a cargar los KPI para cada desarrollador individualmente
       if (users && users.length > 0) {
         Promise.all(
           users.map(user => 
@@ -201,7 +200,7 @@ function ReportsDashboard() {
               })
               .then(data => {
                 if (data) {
-                  // Añadir información del usuario al objeto KPI
+                  // Add information of the user to KPI object
                   return {
                     ...data,
                     userId: user.id,
@@ -216,7 +215,7 @@ function ReportsDashboard() {
               })
           )
         ).then(results => {
-          // Filtrar resultados nulos
+          // Filter null results
           const validResults = results.filter(result => result !== null);
           setAllUsersKpi(validResults);
           
@@ -742,8 +741,8 @@ function ReportsDashboard() {
             <CompareArrowsIcon style={{ marginRight: '5px' }} />
             Comparativas
           </button>
-          <button 
-            className={`tab-button ${tabValue === 4 ? 'active' : ''}`} 
+          <button
+            className={`tab-button ${tabValue === 4 ? 'active' : ''}`}
             onClick={(e) => handleTabChange(e, 4)}
           >
             <ChatIcon style={{ marginRight: '5px' }} />
@@ -802,9 +801,11 @@ function ReportsDashboard() {
                           
                           if (actualHours > 0) {
                             const efficiencyValue = (estimatedHours / actualHours) * 100;
-                            if (efficiencyValue < 80) {
+                            const EFFICIENCY_LOW_THRESHOLD = 80;
+                            const EFFICIENCY_HIGH_THRESHOLD = 120;
+                            if (efficiencyValue < EFFICIENCY_LOW_THRESHOLD) {
                               efficiencyClass = 'efficiency-low';
-                            } else if (efficiencyValue > 120) {
+                            } else if (efficiencyValue > EFFICIENCY_HIGH_THRESHOLD) {
                               efficiencyClass = 'efficiency-high';
                             } else {
                               efficiencyClass = 'efficiency-medium';
@@ -818,7 +819,7 @@ function ReportsDashboard() {
                               <td className="align-right">{formatHours(task.estimatedHours)}</td>
                               <td className="align-right">{formatHours(task.actualHours)}</td>
                               <td className={`align-right ${efficiencyClass}`}>
-                                {task.actualHours > 0 
+                                {task.actualHours > 0
                                   ? formatPercentage((task.estimatedHours / task.actualHours) * 100) 
                                   : 'N/A'}
                               </td>
@@ -1061,22 +1062,21 @@ function ReportsDashboard() {
                           <tbody>
                             {userKpi.tasks.map((task, index) => {
                               // Calcular clase de eficiencia
-                              let efficiencyClass = '';
-                              if (task.completed && task.actualHours > 0) {
-                                const efficiencyValue = (task.estimatedHours / task.actualHours) * 100;
-                                if (efficiencyValue < 80) {
-                                  efficiencyClass = 'efficiency-low';
-                                } else if (efficiencyValue > 120) {
-                                  efficiencyClass = 'efficiency-high';
-                                } else {
-                                  efficiencyClass = 'efficiency-medium';
+                              let efficiencyClass = calculateEfficiencyClass(task);
+                              function calculateEfficiencyClass(task) {
+                                if (task.completed && task.actualHours > 0) {
+                                  const efficiencyValue = (task.estimatedHours / task.actualHours) * 100;
+                                  if (efficiencyValue < 80) return 'efficiency-low';
+                                  if (efficiencyValue > 120) return 'efficiency-high';
+                                  return 'efficiency-medium';
                                 }
+                                return '';
                               }
                               
                               // Calcular clase de estado
                               let statusClass = '';
-                              const status = task.status || 'Pending';
-                              switch(status) {
+                              const taskStatus = task.status || 'Pending';
+                              switch(taskStatus) {
                                 case 'Pending':
                                   statusClass = 'status-pending';
                                   break;
@@ -1098,7 +1098,7 @@ function ReportsDashboard() {
                                   <td>{task.description}</td>
                                   <td>
                                     <span className={`status-badge ${statusClass}`}>
-                                      {status}
+                                      {taskStatus}
                                     </span>
                                   </td>
                                   <td className="align-right">{formatHours(task.estimatedHours)}</td>
