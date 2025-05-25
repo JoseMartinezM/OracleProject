@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "SPRINT")
+@Table(name = "SPRINT", schema = "testuser")
 public class Sprint {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
