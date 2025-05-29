@@ -16,7 +16,7 @@ import java.util.Map;
 @Service
 public class OpenAIService {
 
-    // Usa la API key que me proporcionaste
+    @Value("${openai.api.key}")
     private String apiKey;
 
     private final RestTemplate restTemplate = new RestTemplate();

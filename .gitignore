@@ -48,3 +48,10 @@ frontend/package-lock.json
 frontend/npm-debug.log*
 frontend/yarn-debug.log*
 frontend/yarn-error.log*
+
+# Environment variables (anywhere in the project)
+# Environment variables
+MtdrSpring/backend/.env
+backend/.env.local
+backend/.env.development
+backend/.env.production
