@@ -6,8 +6,8 @@ timeoutInSeconds: 3600
 env:
   variables:
     REGISTRY: mx-queretaro-1.ocir.io
-    NAMESPACE: "axxjocxrvfar"
-    REPO: "todolistapp-springboot"
+    NAMESPACE: axxjocxrvfar
+    REPO: todolistapp-springboot
 
 steps:
   - type: Command
