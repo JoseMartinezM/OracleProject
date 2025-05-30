@@ -1,92 +1,35 @@
-apiVersion: v1
-kind: Service
-metadata:
-  name: todolistapp-springboot-service
-  annotations:
-    oci.oraclecloud.com/loadbalancer-policy: "IP_HASH"
-spec:
-  type: LoadBalancer
-  externalTrafficPolicy: Local
-
-  ports:
-    - port: 80
-      protocol: TCP
-      targetPort: 8080
-  selector:
-    app: todolistapp-springboot
----
-#this is new stuff for hosting on the load balancer
-apiVersion: v1
-kind: Service
-metadata:
-  name: todolistapp-backend-router
-spec:
-  selector:
-    app: todolistapp-springboot
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: http
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: todolistapp-springboot-deployment
+  name: todolistapp-deployment
 spec:
+  replicas: 1
   selector:
     matchLabels:
-      app: todolistapp-springboot
-  replicas: 2
+      app: todolistapp
   template:
     metadata:
       labels:
-        app: todolistapp-springboot
-        version: v1
+        app: todolistapp
     spec:
+      imagePullSecrets:
+        - name: ocirsecret
       containers:
-        - name: todolistapp-springboot
-          image: iad.ocir.io/a01637972/OracleProject
+        - name: todolistapp
+          image: mx-queretaro-1.ocir.io/axxjocxrvfar/todolistapp-springboot:sprint-4
           imagePullPolicy: Always
-          env:
-            - name: db_user
-              value: "TODOUSER"
-            - name: db_url
-              value: "jdbc:oracle:thin:@localdb_high?TNS_ADMIN=/mtdrworkshop/creds"
-            - name: todo.table.name
-              value: "todoitem"
-            - name: driver_class_name
-              value: "oracle.jdbc.OracleDriver"
-            - name: OCI_REGION
-              value: "mx-queretaro-1"
-            - name: dbpassword
-              valueFrom:
-                secretKeyRef:
-                  name: dbuser
-                  key: dbpassword
-                  optional: true
-            - name: ui_username
-              value: "equipo14Oracle"
-            - name: ui_password
-              valueFrom:
-                secretKeyRef:
-                  name: frontendadmin
-                  key: password
-                  optional: true
-          volumeMounts:
-            - name: creds
-              mountPath: /mtdrworkshop/creds
           ports:
-            - containerPort: 8080
-      restartPolicy: Always
-      volumes:
-        - name: creds
-          secret:
-            secretName: db-wallet-secret
-      topologySpreadConstraints:
-        - maxSkew: 1
-          topologyKey: kubernetes.io/hostname
-          whenUnsatisfiable: DoNotSchedule
-          labelSelector:
-            matchLabels:
-              app: todolistapp-springboot
+            - containerPort: 8081
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: todolistapp-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: todolistapp
+  ports:
+    - port: 80
+      targetPort: 8081
+      protocol: TCP
