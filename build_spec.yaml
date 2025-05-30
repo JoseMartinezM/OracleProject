@@ -8,7 +8,7 @@ env:
   variables:
     REGISTRY: "mx-queretaro-1.ocir.io"
     NAMESPACE: "axxjocxrvfar"
-    REPO: "reacttodo/s78fu/todolistapp-springboot"
+    REPO: "todolistapp-springboot"
   exportedVariables:
     - BUILDRUN_HASH
 
