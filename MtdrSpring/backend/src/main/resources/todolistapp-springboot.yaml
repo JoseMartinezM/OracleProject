@@ -1,35 +1,59 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: Service
 metadata:
-  name: todolistapp-deployment
+  name: todolistapp-springboot-service
+  annotations:
+    oci.oraclecloud.com/loadbalancer-policy: "IP_HASH"
 spec:
-  replicas: 1
+  type: LoadBalancer
+  loadBalancerIP: 159.54.152.109
+  externalTrafficPolicy: Local
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 8080
   selector:
-    matchLabels:
-      app: todolistapp
-  template:
-    metadata:
-      labels:
-        app: todolistapp
-    spec:
-      imagePullSecrets:
-        - name: ocirsecret
-      containers:
-        - name: todolistapp
-          image: mx-queretaro-1.ocir.io/axxjocxrvfar/todolistapp-springboot:sprint-4
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 8081
+    app: todolistapp-springboot
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: todolistapp-service
+  name: todolistapp-backend-router
 spec:
-  type: LoadBalancer
   selector:
-    app: todolistapp
+    app: todolistapp-springboot
   ports:
-    - port: 80
+    - protocol: TCP
+      port: 80
       targetPort: 8081
-      protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todolistapp-springboot-deployment
+spec:
+  selector:
+    matchLabels:
+      app: todolistapp-springboot
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: todolistapp-springboot
+        version: v1
+    spec:
+      containers:
+        - name: todolistapp-springboot
+          image: mx-queretaro-1.ocir.io/axxjocxrvfar/todolistapp-springboot:sprint-4
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8081
+              name: http
+      restartPolicy: Always
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: todolistapp-springboot
