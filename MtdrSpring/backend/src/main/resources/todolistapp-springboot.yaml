@@ -1,59 +1,39 @@
-apiVersion: v1
-kind: Service
-metadata:
-  name: todolistapp-springboot-service
-  annotations:
-    oci.oraclecloud.com/loadbalancer-policy: "IP_HASH"
-spec:
-  type: LoadBalancer
-  loadBalancerIP: 159.54.152.109
-  externalTrafficPolicy: Local
-  ports:
-    - port: 80
-      protocol: TCP
-      targetPort: 8080
-  selector:
-    app: todolistapp-springboot
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: todolistapp-backend-router
-spec:
-  selector:
-    app: todolistapp-springboot
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 8081
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: todolistapp-springboot-deployment
-spec:
-  selector:
-    matchLabels:
-      app: todolistapp-springboot
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: todolistapp-springboot
-        version: v1
-    spec:
-      containers:
-        - name: todolistapp-springboot
-          image: mx-queretaro-1.ocir.io/axxjocxrvfar/todolistapp-springboot:sprint-4
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 8081
-              name: http
-      restartPolicy: Always
-      topologySpreadConstraints:
-        - maxSkew: 1
-          topologyKey: kubernetes.io/hostname
-          whenUnsatisfiable: DoNotSchedule
-          labelSelector:
-            matchLabels:
-              app: todolistapp-springboot
+version: 0.1
+component: build
+timeoutInSeconds: 1200
+shell: bash
+
+steps:
+  - name: "Configure kubeconfig for OKE"
+    command: |
+      echo "✅ Configurando acceso al clúster Kubernetes..."
+      oci ce cluster create-kubeconfig \
+        --cluster-id ocid1.cluster.oc1.mx-queretaro-1.aaaaaaaa6adn4bnnebm2cmeyf522k5tig6qwnvhp2bjelbxfvca2uanotz2a \
+        --file $HOME/.kube/config \
+        --region mx-queretaro-1 \
+        --token-version 2.0.0 \
+        --kube-endpoint PUBLIC_ENDPOINT
+
+  - name: "Verificar conectividad con kubectl"
+    command: |
+      echo "🔍 Verificando conectividad con el clúster..."
+      kubectl get nodes
+
+  - name: "Desplegar aplicación"
+    command: |
+      echo "🚀 Aplicando deployment.yaml..."
+      kubectl apply -f deployment.yaml
+
+  - name: "Esperar a que el servicio esté disponible"
+    command: |
+      echo "⏳ Esperando IP externa del LoadBalancer..."
+      for i in {1..10}; do
+        IP=$(kubectl get svc todolistapp-springboot-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+        if [[ -n "$IP" ]]; then
+          echo "✅ Servicio disponible en: http://$IP"
+          break
+        else
+          echo "⏳ Aún sin IP, reintentando en 10s..."
+          sleep 10
+        fi
+      done
