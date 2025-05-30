@@ -6,4 +6,4 @@
 
 # API Keys and secrets
 *.key
-secrets/
+secrets/.env
