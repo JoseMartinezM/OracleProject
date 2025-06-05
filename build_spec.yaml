@@ -11,6 +11,8 @@ env:
     REPO: "todolistapp-springboot"
   exportedVariables:
     - BUILDRUN_HASH
+    - IMAGE_TAG
+    - FULL_IMAGE_URI
 
 steps:
   - type: Command
@@ -26,33 +28,62 @@ steps:
     name: "Define unique image tag"
     timeoutInSeconds: 40
     command: |
+      # Use build run ID for unique tagging
       BUILDRUN_HASH=$(echo "${OCI_BUILD_RUN_ID}" | rev | cut -c 1-7)
+      IMAGE_TAG="${BUILDRUN_HASH}-$(date +%Y%m%d%H%M%S)"
+      FULL_IMAGE_URI="${REGISTRY}/${NAMESPACE}/${REPO}:${IMAGE_TAG}"
+      
       echo "BUILDRUN_HASH=${BUILDRUN_HASH}"
+      echo "IMAGE_TAG=${IMAGE_TAG}"
+      echo "FULL_IMAGE_URI=${FULL_IMAGE_URI}"
 
   - type: Command
-    name: "Build & Push multi-stage"
+    name: "Build Maven Application"
+    command: |
+      cd MtdrSpring/backend
+      echo "📦 Building Maven application..."
+      mvn clean package -DskipTests
+
+  - type: Command
+    name: "Build & Push Docker Image"
     command: |
       cd MtdrSpring/backend
 
-      # 1) Pull de 'latest' para cache
-      docker pull "${REGISTRY}/${NAMESPACE}/${REPO}:latest" || true
+      echo "🐳 Building Docker image..."
+      
+      # 1) Pull latest for cache (ignore errors if doesn't exist)
+      docker pull "${REGISTRY}/${NAMESPACE}/${REPO}:latest" || echo "No latest image found for cache"
 
-      # 2) Build usando cache-from 'latest'
+      # 2) Build with cache and unique tag
       docker build \
         --cache-from "${REGISTRY}/${NAMESPACE}/${REPO}:latest" \
         --file Dockerfile \
-        --tag "${REGISTRY}/${NAMESPACE}/${REPO}:${BUILDRUN_HASH}" \
+        --tag "${FULL_IMAGE_URI}" \
+        --tag "${REGISTRY}/${NAMESPACE}/${REPO}:latest" \
         .
 
-      # 3) Push de la imagen con hash
-      docker push "${REGISTRY}/${NAMESPACE}/${REPO}:${BUILDRUN_HASH}"
-
-      # 4) Tag y push de 'latest'
-      docker tag "${REGISTRY}/${NAMESPACE}/${REPO}:${BUILDRUN_HASH}" \
-        "${REGISTRY}/${NAMESPACE}/${REPO}:latest"
+      # 3) Push both tags
+      echo "📤 Pushing image with tag: ${IMAGE_TAG}"
+      docker push "${FULL_IMAGE_URI}"
+      
+      echo "📤 Pushing latest tag..."
       docker push "${REGISTRY}/${NAMESPACE}/${REPO}:latest"
 
+  - type: Command
+    name: "Verify Image Push"
+    command: |
+      echo "✅ Image successfully pushed:"
+      echo "   - Unique tag: ${FULL_IMAGE_URI}"
+      echo "   - Latest tag: ${REGISTRY}/${NAMESPACE}/${REPO}:latest"
+      
+      # Test image pull to verify it's available
+      docker pull "${FULL_IMAGE_URI}"
+      echo "✅ Image verified and ready for deployment"
+
 outputArtifacts:
-  - name: todolist-image
+  - name: todolist-image-latest
     type: DOCKER_IMAGE
     location: "${REGISTRY}/${NAMESPACE}/${REPO}:latest"
+  - name: todolist-image-tagged
+    type: DOCKER_IMAGE
+    location: "${FULL_IMAGE_URI}"
