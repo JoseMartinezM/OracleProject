@@ -5,160 +5,536 @@
 ** Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl/
 */
 
-/* Estilos específicos para la integración de GitHub */
+/* Estilos específicos para la integración de GitHub - ACTUALIZADOS PARA MAYOR TAMAÑO */
+
+/* Status badges - Más grandes y espaciosos */
 .status-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.8rem;
-    border-radius: 20px;
-    padding: 0.3rem 0.8rem;
-    min-width: 20px;
-  }
-  
-  .status-badge.merged {
-    background: rgba(93, 188, 134, 0.2);
-    color: #5dbc86;
-  }
-  
-  .ci-status {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.8rem;
-    border-radius: 20px;
-    padding: 0.3rem 0.8rem;
-    min-width: 20px;
-    margin-right: 0.5rem;
-  }
-  
-  .ci-pending {
-    background: rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.7);
-  }
-  
-  .ci-running {
-    background: rgba(66, 139, 202, 0.2);
-    color: #6aafff;
-    animation: pulse 2s infinite;
-  }
-  
-  .ci-success {
-    background: rgba(93, 188, 134, 0.2);
-    color: #5dbc86;
-  }
-  
-  .ci-failed {
-    background: rgba(199, 70, 52, 0.2);
-    color: #ff8080;
-  }
-  
-  /* Fila resaltada para CI fallido */
-  tr.ci-failed {
-    border-left: 3px solid var(--oracle-red);
-  }
-  
-  /* Ajustes de botón y efectos para sección GitHub */
-  button.MuiButton-root.AddButton::before {
-    content: "+";
-    font-size: 1.4rem;
-    font-weight: 700;
-    margin-right: 0.5rem;
-    line-height: 0;
-  }
-  
-  /* Ajuste para diferentes tipos de botones */
-  .MuiDialogActions-root .MuiButton-root.DeleteButton,
-  .MuiDialogActions-root .MuiButton-root.DoneButton {
-    min-width: 100px;
-    margin: 0.5rem;
-  }
-  
-  /* Tabs de navegación para cambiar entre vistas */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem; /* Aumentado de 0.8rem */
+  border-radius: 24px; /* Más redondeado */
+  padding: 0.5rem 1.2rem; /* Más padding */
+  min-width: 28px; /* Más ancho */
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.status-badge.merged {
+  background: rgba(93, 188, 134, 0.25); /* Más opaco */
+  color: #5dbc86;
+  box-shadow: 0 2px 8px rgba(93, 188, 134, 0.2);
+}
+
+/* CI Status indicators - Más prominentes */
+.ci-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem; /* Aumentado */
+  border-radius: 24px;
+  padding: 0.5rem 1.2rem; /* Más padding */
+  min-width: 28px;
+  margin-right: 0.75rem; /* Más margen */
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  transition: all 0.3s ease;
+}
+
+.ci-pending {
+  background: rgba(255, 255, 255, 0.12); /* Ligeramente más opaco */
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ci-running {
+  background: rgba(66, 139, 202, 0.25); /* Más opaco */
+  color: #6aafff;
+  animation: pulse 2s infinite;
+  border: 1px solid rgba(66, 139, 202, 0.3);
+  box-shadow: 0 2px 8px rgba(66, 139, 202, 0.2);
+}
+
+.ci-success {
+  background: rgba(93, 188, 134, 0.25); /* Más opaco */
+  color: #5dbc86;
+  border: 1px solid rgba(93, 188, 134, 0.3);
+  box-shadow: 0 2px 8px rgba(93, 188, 134, 0.2);
+}
+
+.ci-failed {
+  background: rgba(199, 70, 52, 0.25); /* Más opaco */
+  color: #ff8080;
+  border: 1px solid rgba(199, 70, 52, 0.3);
+  box-shadow: 0 2px 8px rgba(199, 70, 52, 0.2);
+}
+
+/* Fila resaltada para CI fallido - Más prominente */
+tr.ci-failed {
+  border-left: 4px solid var(--oracle-red); /* Más grueso */
+  background: rgba(199, 70, 52, 0.05); /* Fondo sutil */
+}
+
+/* Ajustes de botón y efectos para sección GitHub - Mejorados */
+button.MuiButton-root.AddButton::before {
+  content: "+";
+  font-size: 1.6rem; /* Más grande */
+  font-weight: 700;
+  margin-right: 0.75rem; /* Más margen */
+  line-height: 0;
+}
+
+/* Ajuste para diferentes tipos de botones - Más espaciosos */
+.MuiDialogActions-root .MuiButton-root.DeleteButton,
+.MuiDialogActions-root .MuiButton-root.DoneButton {
+  min-width: 120px; /* Más ancho */
+  margin: 0.75rem; /* Más margen */
+  padding: 10px 20px; /* Más padding */
+  font-size: 1rem; /* Texto más grande */
+  border-radius: 10px; /* Más redondeado */
+}
+
+/* Tabs de navegación para cambiar entre vistas - Actualizados */
+.app-tabs {
+  display: flex;
+  width: 100%;
+  margin-bottom: 2.5rem; /* Más margen */
+  background: rgba(255, 255, 255, 0.07); /* Ligeramente más opaco */
+  border-radius: 0.75rem; /* Más redondeado */
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Sombra agregada */
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.app-tab {
+  flex: 1;
+  text-align: center;
+  padding: 1.5rem 1.25rem; /* Más padding */
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: rgba(255, 255, 255, 0.7);
+  position: relative;
+  font-size: 1.1rem; /* Texto más grande */
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.app-tab.active {
+  background: rgba(199, 70, 52, 0.25); /* Más opaco */
+  color: var(--oracle-text);
+  box-shadow: inset 0 2px 8px rgba(199, 70, 52, 0.2);
+}
+
+.app-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 4px; /* Más grueso */
+  background: var(--oracle-red);
+}
+
+.app-tab:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.12); /* Más opaco */
+  color: var(--oracle-text);
+  transform: translateY(-1px); /* Efecto hover sutil */
+}
+
+/* Ajuste responsive para los tabs - Mejorado */
+@media (max-width: 768px) {
   .app-tabs {
-    display: flex;
-    width: 100%;
-    margin-bottom: 2rem;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 0.5rem;
-    overflow: hidden;
+      flex-direction: column;
+      border-radius: 0.5rem;
   }
   
   .app-tab {
-    flex: 1;
-    text-align: center;
-    padding: 1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    color: rgba(255, 255, 255, 0.7);
-    position: relative;
-  }
-  
-  .app-tab.active {
-    background: rgba(199, 70, 52, 0.2);
-    color: var(--oracle-text);
+      padding: 1rem 0.75rem; /* Ajustado para móvil */
+      font-size: 1rem;
   }
   
   .app-tab.active::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 3px;
-    background: var(--oracle-red);
+      height: 3px;
   }
-  
-  .app-tab:hover:not(.active) {
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--oracle-text);
-  }
-  
-  /* Ajuste responsive para los tabs */
-  @media (max-width: 768px) {
-    .app-tabs {
-      flex-direction: column;
-    }
-    
-    .app-tab {
-      padding: 0.7rem;
-    }
-    
-    .app-tab.active::after {
-      height: 2px;
-    }
-  }
+}
 
-  /* Estilos para la integración de GitHub */
+/* Estilos para la integración de GitHub - Mejorados */
 .commit-sha {
-  font-family: monospace;
-  background-color: var(--trans-10);
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
-  font-size: 0.9rem;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  background-color: var(--trans-15); /* Más opaco */
+  padding: 4px 10px; /* Más padding */
+  border-radius: 8px; /* Más redondeado */
+  font-size: 0.95rem; /* Ligeramente más grande */
   display: inline-block;
+  border: 1px solid var(--trans-10);
+  transition: all 0.3s ease;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.commit-sha:hover {
+  background-color: var(--trans-25);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .github-link {
   color: var(--oracle-text);
   text-decoration: none;
-  background-color: var(--trans-15);
-  padding: 6px 12px;
-  border-radius: var(--radius-md);
-  font-size: 0.85rem;
+  background-color: var(--trans-20); /* Más opaco */
+  padding: 10px 18px; /* Más padding */
+  border-radius: 10px; /* Más redondeado */
+  font-size: 0.95rem; /* Más grande */
   transition: all 0.3s ease;
   display: inline-block;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  border: 1px solid var(--trans-10);
+  position: relative;
+  overflow: hidden;
+}
+
+.github-link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
 }
 
 .github-link:hover {
   background-color: var(--oracle-red);
-  transform: translateY(-2px);
+  transform: translateY(-3px); /* Más elevación */
+  box-shadow: 0 6px 20px rgba(199, 70, 52, 0.3); /* Sombra más prominente */
+  border-color: var(--oracle-red);
 }
 
+.github-link:hover::before {
+  left: 100%;
+}
+
+.github-link:active {
+  transform: translateY(-1px);
+}
+
+/* Texto de ayuda en diálogos - Mejorado */
 .dialog-help-text {
   color: var(--trans-70);
-  font-size: 0.85rem;
-  margin-top: 16px;
+  font-size: 0.9rem; /* Ligeramente más grande */
+  margin-top: 20px; /* Más margen */
+  line-height: 1.5;
+  padding: 12px 16px;
+  background-color: var(--trans-05);
+  border-radius: 8px;
+  border-left: 3px solid var(--oracle-red);
+}
+
+/* Contenedor principal de GitHub Integration - Espacioso */
+.github-integration-container {
+  padding: 2rem 1.5rem; /* Más padding */
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+/* Sección de tareas para branches - Mejorada */
+.github-tasks-section {
+  margin-bottom: 3rem; /* Más espacio entre secciones */
+}
+
+.github-tasks-section .task-section-header {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--trans-10); /* Borde más grueso */
+}
+
+.github-tasks-section .task-section-header h2 {
+  font-size: 1.4rem; /* Más grande */
+  color: var(--oracle-text);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.github-tasks-section .task-section-header h2::before {
+  content: '🌿'; /* Emoji de rama */
+  font-size: 1.2rem;
+}
+
+/* Sección de branches del repositorio - Mejorada */
+.github-branches-section {
+  margin-top: 3rem;
+}
+
+.github-branches-section .task-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--trans-10);
+}
+
+.github-branches-section .task-section-header h2 {
+  font-size: 1.4rem;
+  color: var(--oracle-text);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0;
+}
+
+.github-branches-section .task-section-header h2::before {
+  content: '📦'; /* Emoji de repositorio */
+  font-size: 1.2rem;
+}
+
+/* Botón de refresh - Mejorado */
+.refresh-button {
+  background-color: var(--trans-15) !important;
+  color: var(--oracle-text) !important;
+  border: 1px solid var(--trans-25) !important;
+  border-radius: 8px !important;
+  padding: 8px 16px !important;
+  font-size: 0.9rem !important;
+  transition: all 0.3s ease !important;
+}
+
+.refresh-button:hover {
+  background-color: var(--trans-25) !important;
+  border-color: var(--oracle-red) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Tablas específicas de GitHub - Más espaciosas */
+.github-integration-container table.itemlist {
+  border-spacing: 0 16px; /* Más espacio entre filas */
+}
+
+.github-integration-container table.itemlist td {
+  padding: 1.25rem 1.5rem; /* Más padding */
+  font-size: 1rem; /* Texto más grande */
+}
+
+.github-integration-container table.itemlist tr.task-row {
+  background: var(--trans-07); /* Fondo ligeramente más opaco */
+  border: 1px solid var(--trans-05);
+  transition: all 0.3s ease;
+}
+
+.github-integration-container table.itemlist tr.task-row:hover {
+  background: var(--trans-12);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border-color: var(--trans-15);
+}
+
+/* Mensaje vacío mejorado para GitHub */
+.github-empty-message {
+  text-align: center;
+  padding: 3rem 2rem; /* Más padding */
+  color: var(--trans-50);
+  font-style: italic;
+  background: var(--trans-05);
+  border-radius: 12px; /* Más redondeado */
+  margin: 1.5rem 0; /* Más margen */
+  font-size: 1.1rem; /* Más grande */
+  border: 1px solid var(--trans-05);
+}
+
+.github-empty-message::before {
+  content: '🚫';
+  display: block;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+/* Loading container específico para GitHub */
+.github-loading-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 4rem 0; /* Más padding */
+  gap: 1.5rem;
+}
+
+.github-loading-spinner {
+  border: 4px solid var(--trans-10);
+  border-radius: 50%;
+  border-top: 4px solid var(--oracle-red);
+  width: 60px; /* Más grande */
+  height: 60px;
+  animation: spin 1s linear infinite;
+}
+
+.github-loading-text {
+  color: var(--trans-70);
+  font-size: 1.1rem;
+  font-style: italic;
+}
+
+/* Error message específico para GitHub */
+.github-error-message {
+  background-color: rgba(199, 70, 52, 0.1);
+  border: 1px solid rgba(199, 70, 52, 0.3);
+  border-left: 4px solid var(--oracle-red);
+  padding: 1.5rem; /* Más padding */
+  margin-bottom: 2rem; /* Más margen */
+  border-radius: 10px; /* Más redondeado */
+  color: #ffcccc;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.github-error-message::before {
+  content: '⚠️ ';
+  font-size: 1.2rem;
+  margin-right: 0.5rem;
+}
+
+/* Notificaciones/Snackbars mejoradas */
+.github-notification {
+  padding: 16px 24px !important; /* Más padding */
+  border-radius: 10px !important; /* Más redondeado */
+  font-size: 1rem !important; /* Más grande */
+  font-weight: 500 !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Diálogos específicos de GitHub - Mejorados */
+.github-dialog .MuiDialogTitle-root {
+  font-size: 1.5rem !important;
+  padding: 1.5rem 1.5rem 1rem !important;
+  background: linear-gradient(135deg, var(--trans-05), var(--trans-10));
+  border-bottom: 1px solid var(--trans-15);
+}
+
+.github-dialog .MuiDialogContent-root {
+  padding: 1.5rem !important;
+  font-size: 1rem !important;
+  line-height: 1.6 !important;
+}
+
+.github-dialog .MuiDialogActions-root {
+  padding: 1rem 1.5rem 1.5rem !important;
+  gap: 1rem;
+  background: var(--trans-03);
+}
+
+/* Input de nombre de branch - Mejorado */
+.github-dialog .MuiTextField-root {
+  margin-top: 1.5rem !important;
+}
+
+.github-dialog .MuiInputBase-root {
+  font-size: 1rem !important;
+  padding: 4px !important;
+  border-radius: 10px !important;
+}
+
+.github-dialog .MuiInputBase-input {
+  padding: 16px 18px !important;
+  font-family: 'SF Mono', 'Monaco', monospace !important;
+  letter-spacing: 0.3px !important;
+}
+
+/* Responsive específico para GitHub Integration */
+@media (max-width: 1024px) {
+  .github-integration-container {
+      padding: 1.5rem 1rem;
+  }
+  
+  .github-branches-section .task-section-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .github-integration-container {
+      padding: 1rem 0.5rem;
+  }
+  
+  .github-integration-container table.itemlist td {
+      padding: 1rem;
+      font-size: 0.9rem;
+  }
+  
+  .github-link {
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      width: 100%;
+      text-align: center;
+      margin-top: 0.5rem;
+  }
+  
+  .commit-sha {
+      font-size: 0.8rem;
+      padding: 3px 8px;
+  }
+  
+  .status-badge,
+  .ci-status {
+      font-size: 0.8rem;
+      padding: 0.4rem 1rem;
+  }
+  
+  .github-tasks-section .task-section-header h2,
+  .github-branches-section .task-section-header h2 {
+      font-size: 1.2rem;
+  }
+  
+  .github-empty-message {
+      padding: 2rem 1rem;
+      font-size: 1rem;
+  }
+  
+  .github-loading-container {
+      padding: 3rem 0;
+  }
+  
+  .github-loading-spinner {
+      width: 50px;
+      height: 50px;
+  }
+}
+
+@media (max-width: 480px) {
+  .github-integration-container table.itemlist td {
+      padding: 0.75rem;
+      font-size: 0.85rem;
+  }
+  
+  .github-link {
+      padding: 6px 12px;
+      font-size: 0.8rem;
+  }
+  
+  .commit-sha {
+      font-size: 0.75rem;
+      padding: 2px 6px;
+  }
+  
+  .dialog-help-text {
+      font-size: 0.8rem;
+      padding: 10px 12px;
+      margin-top: 16px;
+  }
+  
+  .github-error-message {
+      padding: 1rem;
+      font-size: 0.9rem;
+  }
+  
+  .status-badge,
+  .ci-status {
+      font-size: 0.75rem;
+      padding: 0.3rem 0.8rem;
+  }
 }

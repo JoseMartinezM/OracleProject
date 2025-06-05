@@ -1,4 +1,4 @@
-// ReportsDashboard.js - Versión completa con soluciones a los problemas
+// ReportsDashboard.js - Versión mejorada con gráficas más grandes y legibles
 import React, { useState, useEffect } from 'react';
 import './ReportsDashboard.css';
 import { API_LIST } from './API';
@@ -16,9 +16,6 @@ const Chart = window.Chart;
 
 // Base URL for API
 const API_URL = API_LIST.substring(0, API_LIST.lastIndexOf('/'));
-
-// OpenAI API Key y URL - Esto debe manejarse en el backend por seguridad
-const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
 // Tab Panel component
 function TabPanel(props) {
@@ -54,11 +51,11 @@ function ReportsDashboard() {
   const [allSprintsKpi, setAllSprintsKpi] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [loadingSprintChange, setLoadingSprintChange] = useState(false);
   
   // Estado para la integración con ChatGPT
   const [aiAnalysis, setAiAnalysis] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState('');
   
   // Referencias para los canvas de gráficos
   const taskCompletionChartRef = React.useRef(null);
@@ -70,18 +67,131 @@ function ReportsDashboard() {
   
   const chartInstances = React.useRef({});
   
-  // Colores para los gráficos - usando variables del CSS existente
+  // Colores mejorados para los gráficos
   const COLORS = [
-    'rgba(76, 175, 80, 0.7)',   // --kpi-green
-    'rgba(255, 152, 0, 0.7)',   // --kpi-orange
-    'rgba(33, 150, 243, 0.7)',  // --kpi-blue
-    'rgba(244, 67, 54, 0.7)',   // --kpi-red
-    'rgba(156, 39, 176, 0.7)',  // purple
-    'rgba(63, 81, 181, 0.7)',   // indigo
-    'rgba(0, 150, 136, 0.7)',   // teal
-    'rgba(121, 85, 72, 0.7)',   // brown
-    'rgba(96, 125, 139, 0.7)'   // blueGrey
+    'rgba(76, 175, 80, 0.8)',   // Verde más intenso
+    'rgba(255, 152, 0, 0.8)',   // Naranja más intenso
+    'rgba(33, 150, 243, 0.8)',  // Azul más intenso
+    'rgba(244, 67, 54, 0.8)',   // Rojo más intenso
+    'rgba(156, 39, 176, 0.8)',  // Púrpura más intenso
+    'rgba(63, 81, 181, 0.8)',   // Índigo más intenso
+    'rgba(0, 150, 136, 0.8)',   // Teal más intenso
+    'rgba(121, 85, 72, 0.8)',   // Marrón más intenso
+    'rgba(96, 125, 139, 0.8)'   // Gris azulado más intenso
   ];
+
+  // Colores de borde más definidos
+  const BORDER_COLORS = [
+    'rgba(76, 175, 80, 1)',
+    'rgba(255, 152, 0, 1)',
+    'rgba(33, 150, 243, 1)',
+    'rgba(244, 67, 54, 1)',
+    'rgba(156, 39, 176, 1)',
+    'rgba(63, 81, 181, 1)',
+    'rgba(0, 150, 136, 1)',
+    'rgba(121, 85, 72, 1)',
+    'rgba(96, 125, 139, 1)'
+  ];
+
+  // Configuración común mejorada para todas las gráficas
+  const getCommonChartOptions = (title, showLegend = true) => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    devicePixelRatio: 2, // Para mejor resolución
+    plugins: {
+      title: {
+        display: true,
+        text: title,
+        font: {
+          size: 20,
+          weight: 'bold'
+        },
+        color: '#FFFFFF',
+        padding: {
+          top: 15,
+          bottom: 25
+        }
+      },
+      legend: {
+        display: showLegend,
+        position: 'bottom',
+        labels: {
+          color: '#FFFFFF',
+          font: {
+            size: 16
+          },
+          padding: 25,
+          usePointStyle: true
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+        titleColor: '#FFFFFF',
+        bodyColor: '#FFFFFF',
+        borderColor: '#C74634',
+        borderWidth: 2,
+        cornerRadius: 10,
+        titleFont: {
+          size: 16,
+          weight: 'bold'
+        },
+        bodyFont: {
+          size: 14
+        },
+        padding: 15
+      }
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: '#FFFFFF',
+          font: {
+            size: 14
+          },
+          maxRotation: 45,
+          minRotation: 0
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.15)',
+          lineWidth: 1
+        },
+        title: {
+          color: '#FFFFFF',
+          font: {
+            size: 16,
+            weight: 'bold'
+          }
+        }
+      },
+      y: {
+        ticks: {
+          color: '#FFFFFF',
+          font: {
+            size: 14
+          }
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.15)',
+          lineWidth: 1
+        },
+        title: {
+          color: '#FFFFFF',
+          font: {
+            size: 16,
+            weight: 'bold'
+          }
+        }
+      }
+    },
+    layout: {
+      padding: {
+        top: 20,
+        bottom: 20,
+        left: 20,
+        right: 20
+      }
+    }
+  });
   
   // Fetch sprints and users on component mount
   useEffect(() => {
@@ -115,7 +225,6 @@ function ReportsDashboard() {
         }
       })
       .then(data => {
-        // Filter only developers
         const developers = data.filter(user => user.role === "Developer");
         setUsers(developers);
         if (developers.length > 0) {
@@ -129,7 +238,7 @@ function ReportsDashboard() {
         setLoading(false);
       });
       
-    // Fetch KPI summary data for all sprints (para gráficas históricas)
+    // Fetch KPI summary data for all sprints
     fetch(`${API_URL}/reports/sprints/summary`)
       .then(response => {
         if (response.ok) {
@@ -187,7 +296,6 @@ function ReportsDashboard() {
         });
         
       // Fetch KPI data for all developers in the selected sprint
-      // Vamos a cargar los KPI para cada desarrollador individualmente
       if (users && users.length > 0) {
         Promise.all(
           users.map(user => 
@@ -201,7 +309,6 @@ function ReportsDashboard() {
               })
               .then(data => {
                 if (data) {
-                  // Añadir información del usuario al objeto KPI
                   return {
                     ...data,
                     userId: user.id,
@@ -216,11 +323,9 @@ function ReportsDashboard() {
               })
           )
         ).then(results => {
-          // Filtrar resultados nulos
           const validResults = results.filter(result => result !== null);
           setAllUsersKpi(validResults);
           
-          // Actualizar gráficas si estamos en la pestaña de comparativas
           if (tabValue === 3) {
             setTimeout(() => {
               if (totalHoursBySprintChartRef.current) renderTotalHoursBySprintChart();
@@ -247,7 +352,6 @@ function ReportsDashboard() {
         .then(data => {
           setUserKpi(data);
           
-          // Actualizar gráfica si estamos en la pestaña de desarrollador
           if (tabValue === 2 && userTaskCompletionChartRef.current) {
             setTimeout(() => {
               renderUserTaskCompletionChart();
@@ -279,51 +383,87 @@ function ReportsDashboard() {
       renderTotalHoursBySprintChart();
     }
   }, [tabValue, allSprintsKpi]);
+
+  // Efecto específico para cuando cambia el sprint seleccionado
+useEffect(() => {
+  if (selectedSprint && tabValue === 3) {
+    console.log('Sprint cambió, re-renderizando gráficas...'); // Para debug
+    
+    // Esperar un poco más para asegurar que los datos estén actualizados
+    setTimeout(() => {
+      if (allUsersKpi.length > 0) {
+        if (hoursByDeveloperChartRef.current) {
+          renderHoursByDeveloperChart();
+        }
+        if (tasksByDeveloperChartRef.current) {
+          renderTasksByDeveloperChart();
+        }
+      }
+    }, 200); // Delay un poco más largo para cambios de sprint
+  }
+}, [selectedSprint, allUsersKpi]);
   
-  useEffect(() => {
-    if (tabValue === 3 && allUsersKpi.length > 0 && hoursByDeveloperChartRef.current && tasksByDeveloperChartRef.current) {
-      renderHoursByDeveloperChart();
-      renderTasksByDeveloperChart();
-    }
-  }, [tabValue, allUsersKpi]);
+ // Renderizar gráficas cuando cambian los datos o la pestaña
+useEffect(() => {
+  if (tabValue === 3) {
+    // Usar setTimeout para asegurar que el DOM esté listo
+    setTimeout(() => {
+      if (allSprintsKpi.length > 0 && totalHoursBySprintChartRef.current) {
+        renderTotalHoursBySprintChart();
+      }
+      if (allUsersKpi.length > 0) {
+        if (hoursByDeveloperChartRef.current) {
+          renderHoursByDeveloperChart();
+        }
+        if (tasksByDeveloperChartRef.current) {
+          renderTasksByDeveloperChart();
+        }
+      }
+    }, 100); // Pequeño delay para asegurar que el DOM esté listo
+  }
+}, [tabValue, allSprintsKpi, allUsersKpi, selectedSprint]); // Agregar selectedSprint como dependencia
   
-  // Funciones para renderizar gráficos
+  // Funciones para renderizar gráficos MEJORADAS
   const renderTaskCompletionChart = () => {
     if (!teamKpi) return;
     
     const ctx = taskCompletionChartRef.current.getContext('2d');
     
-    // Destruir gráfico previo si existe
     if (chartInstances.current.taskCompletionChart) {
       chartInstances.current.taskCompletionChart.destroy();
     }
     
-    // Adaptación para trabajar con la estructura real de datos de tu API
     const completedTasks = teamKpi.completedTasks || 0;
     const totalTasks = teamKpi.totalTasks || 0;
     const pendingTasks = totalTasks - completedTasks;
     
     chartInstances.current.taskCompletionChart = new Chart(ctx, {
-      type: 'pie',
+      type: 'doughnut', // Cambiado a doughnut para mejor visualización
       data: {
-        labels: ['Completed', 'Pending'],
+        labels: ['Completadas', 'Pendientes'],
         datasets: [{
           data: [completedTasks, pendingTasks],
           backgroundColor: [COLORS[0], COLORS[1]],
-          hoverBackgroundColor: [COLORS[0], COLORS[1]]
+          borderColor: [BORDER_COLORS[0], BORDER_COLORS[1]],
+          borderWidth: 3,
+          hoverBackgroundColor: [COLORS[0], COLORS[1]],
+          hoverBorderWidth: 4
         }]
       },
       options: {
-        responsive: true,
+        ...getCommonChartOptions('Progreso de Tareas del Equipo'),
+        cutout: '60%', // Para el efecto doughnut
         plugins: {
+          ...getCommonChartOptions('Progreso de Tareas del Equipo').plugins,
           tooltip: {
+            ...getCommonChartOptions('Progreso de Tareas del Equipo').plugins.tooltip,
             callbacks: {
               label: function(context) {
                 const label = context.label || '';
                 const value = context.raw || 0;
                 const total = totalTasks;
                 const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-                return `${label}: ${value} (${percentage}%)`;
+                return `${label}: ${value} tareas (${percentage}%)`;
               }
             }
           }
@@ -337,37 +477,67 @@ function ReportsDashboard() {
     
     const ctx = hoursComparisonChartRef.current.getContext('2d');
     
-    // Destruir gráfico previo si existe
     if (chartInstances.current.hoursComparisonChart) {
       chartInstances.current.hoursComparisonChart.destroy();
     }
     
-    // Adaptación para trabajar con la estructura real de datos de tu API
     const estimatedHours = teamKpi.totalEstimatedHours || 0;
     const actualHours = teamKpi.totalActualHours || 0;
     
     chartInstances.current.hoursComparisonChart = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: ['Estimated vs Actual Hours'],
+        labels: ['Horas del Sprint'],
         datasets: [
           {
-            label: 'Estimated Hours',
+            label: 'Horas Estimadas',
             data: [estimatedHours],
-            backgroundColor: COLORS[2]
+            backgroundColor: COLORS[2],
+            borderColor: BORDER_COLORS[2],
+            borderWidth: 2,
+            borderRadius: 8,
+            borderSkipped: false,
           },
           {
-            label: 'Actual Hours',
+            label: 'Horas Reales',
             data: [actualHours],
-            backgroundColor: COLORS[3]
+            backgroundColor: COLORS[3],
+            borderColor: BORDER_COLORS[3],
+            borderWidth: 2,
+            borderRadius: 8,
+            borderSkipped: false,
           }
         ]
       },
       options: {
-        responsive: true,
+        ...getCommonChartOptions('Comparación de Horas'),
         scales: {
+          ...getCommonChartOptions('Comparación de Horas').scales,
           y: {
-            beginAtZero: true
+            ...getCommonChartOptions('Comparación de Horas').scales.y,
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Horas',
+              color: '#FFFFFF',
+              font: {
+                size: 14,
+                weight: 'bold'
+              }
+            }
+          }
+        },
+        plugins: {
+          ...getCommonChartOptions('Comparación de Horas').plugins,
+          tooltip: {
+            ...getCommonChartOptions('Comparación de Horas').plugins.tooltip,
+            callbacks: {
+              label: function(context) {
+                const label = context.dataset.label || '';
+                const value = context.raw || 0;
+                return `${label}: ${value.toFixed(1)} horas`;
+              }
+            }
           }
         }
       }
@@ -379,37 +549,41 @@ function ReportsDashboard() {
     
     const ctx = userTaskCompletionChartRef.current.getContext('2d');
     
-    // Destruir gráfico previo si existe
     if (chartInstances.current.userTaskCompletionChart) {
       chartInstances.current.userTaskCompletionChart.destroy();
     }
     
-    // Adaptación para trabajar con la estructura real de datos de tu API
     const completedTasks = userKpi.completedTasks || 0;
     const totalTasks = userKpi.totalTasks || 0;
     const pendingTasks = totalTasks - completedTasks;
     
     chartInstances.current.userTaskCompletionChart = new Chart(ctx, {
-      type: 'pie',
+      type: 'doughnut',
       data: {
-        labels: ['Completed', 'Pending'],
+        labels: ['Completadas', 'Pendientes'],
         datasets: [{
           data: [completedTasks, pendingTasks],
           backgroundColor: [COLORS[0], COLORS[1]],
-          hoverBackgroundColor: [COLORS[0], COLORS[1]]
+          borderColor: [BORDER_COLORS[0], BORDER_COLORS[1]],
+          borderWidth: 3,
+          hoverBackgroundColor: [COLORS[0], COLORS[1]],
+          hoverBorderWidth: 4
         }]
       },
       options: {
-        responsive: true,
+        ...getCommonChartOptions('Progreso Personal de Tareas'),
+        cutout: '60%',
         plugins: {
+          ...getCommonChartOptions('Progreso Personal de Tareas').plugins,
           tooltip: {
+            ...getCommonChartOptions('Progreso Personal de Tareas').plugins.tooltip,
             callbacks: {
               label: function(context) {
                 const label = context.label || '';
                 const value = context.raw || 0;
                 const total = totalTasks;
                 const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-                return `${label}: ${value} (${percentage}%)`;
+                return `${label}: ${value} tareas (${percentage}%)`;
               }
             }
           }
@@ -418,9 +592,7 @@ function ReportsDashboard() {
     });
   };
   
-  // Nuevas funciones para renderizar las gráficas solicitadas, adaptadas a tu estructura de datos
-  
-  // Gráfica 1: Horas Totales trabajadas por Sprint
+  // Gráfica 1: Horas Totales trabajadas por Sprint - MEJORADA
   const renderTotalHoursBySprintChart = () => {
     if (!allSprintsKpi || allSprintsKpi.length === 0) return;
     
@@ -431,8 +603,11 @@ function ReportsDashboard() {
       chartInstances.current.totalHoursBySprintChart.destroy();
     }
     
-    // Adaptación para trabajar con la estructura real de datos de tu API
-    const sprintNames = allSprintsKpi.map(sprint => sprint.sprintName || sprint.name || `Sprint ${sprint.id}`);
+    // Preparar datos con nombres más cortos si es necesario
+    const sprintNames = allSprintsKpi.map(sprint => {
+      const name = sprint.sprintName || sprint.name || `Sprint ${sprint.id}`;
+      return name.length > 20 ? name.substring(0, 20) + '...' : name;
+    });
     const totalHours = allSprintsKpi.map(sprint => sprint.totalActualHours || 0);
     
     chartInstances.current.totalHoursBySprintChart = new Chart(ctx, {
@@ -441,37 +616,131 @@ function ReportsDashboard() {
         labels: sprintNames,
         datasets: [
           {
-            label: 'Total Hours Worked',
+            label: 'Horas Totales Trabajadas',
             data: totalHours,
             borderColor: COLORS[2],
-            backgroundColor: COLORS[2] + '33', // Transparencia
+            backgroundColor: COLORS[2] + '33',
             fill: true,
-            tension: 0.2
+            tension: 0.4,
+            borderWidth: 3,
+            pointBackgroundColor: COLORS[2],
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2,
+            pointRadius: 6,
+            pointHoverRadius: 8,
+            pointHoverBackgroundColor: COLORS[2],
+            pointHoverBorderColor: '#ffffff',
+            pointHoverBorderWidth: 3
           }
         ]
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false, // ← ESTO ES LA CLAVE
+        layout: {
+          padding: {
+            top: 20,
+            right: 20,
+            bottom: 20,
+            left: 20
+          }
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: {
+              usePointStyle: true,
+              padding: 20,
+              font: {
+                size: 14,
+                weight: '500'
+              },
+              color: '#ffffff'
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(49, 45, 42, 0.95)',
+            titleColor: '#C74634',
+            bodyColor: '#ffffff',
+            borderColor: '#C74634',
+            borderWidth: 1,
+            cornerRadius: 8,
+            titleFont: {
+              size: 14,
+              weight: 'bold'
+            },
+            bodyFont: {
+              size: 13
+            },
+            padding: 12,
+            callbacks: {
+              title: function(context) {
+                const index = context[0].dataIndex;
+                return allSprintsKpi[index]?.sprintName || allSprintsKpi[index]?.name || `Sprint ${index + 1}`;
+              },
+              label: function(context) {
+                const hours = context.raw || 0;
+                return `Horas totales: ${hours.toFixed(1)}h`;
+              }
+            }
+          }
+        },
         scales: {
           y: {
             beginAtZero: true,
             title: {
               display: true,
-              text: 'Hours'
+              text: 'Horas',
+              color: '#ffffff',
+              font: {
+                size: 16,
+                weight: 'bold'
+              }
+            },
+            ticks: {
+              color: '#ffffff',
+              font: {
+                size: 14
+              },
+              callback: function(value) {
+                return value.toFixed(1) + 'h';
+              }
+            },
+            grid: {
+              color: 'rgba(255, 255, 255, 0.1)',
+              lineWidth: 1
             }
           },
           x: {
             title: {
               display: true,
-              text: 'Sprints'
+              text: 'Sprints',
+              color: '#ffffff',
+              font: {
+                size: 16,
+                weight: 'bold'
+              }
+            },
+            ticks: {
+              color: '#ffffff',
+              font: {
+                size: 12
+              },
+              maxRotation: 45,
+              minRotation: 0
+            },
+            grid: {
+              color: 'rgba(255, 255, 255, 0.05)',
+              lineWidth: 1
             }
           }
         }
       }
     });
   };
-  
-  // Gráfica 2: Horas Trabajadas por Developer por Sprint
+
+  // Gráfica 2: Horas Trabajadas por Developer - MEJORADA
   const renderHoursByDeveloperChart = () => {
     if (!allUsersKpi || allUsersKpi.length === 0) return;
     
@@ -482,8 +751,11 @@ function ReportsDashboard() {
       chartInstances.current.hoursByDeveloperChart.destroy();
     }
     
-    // Adaptación para trabajar con la estructura real de datos de tu API
-    const userNames = allUsersKpi.map(user => user.userName || user.name || `User ${user.userId || 'ID'}`);
+    // Preparar datos con nombres más cortos si es necesario
+    const userNames = allUsersKpi.map(user => {
+      const name = user.userName || user.name || `User ${user.userId || 'ID'}`;
+      return name.length > 15 ? name.substring(0, 15) + '...' : name;
+    });
     const actualHours = allUsersKpi.map(user => user.totalActualHours || 0);
     
     chartInstances.current.hoursByDeveloperChart = new Chart(ctx, {
@@ -492,26 +764,114 @@ function ReportsDashboard() {
         labels: userNames,
         datasets: [
           {
-            label: 'Hours Worked',
+            label: 'Horas Trabajadas',
             data: actualHours,
             backgroundColor: allUsersKpi.map((_, index) => COLORS[index % COLORS.length]),
+            borderColor: allUsersKpi.map((_, index) => COLORS[index % COLORS.length].replace('0.7', '1')),
+            borderWidth: 2,
+            borderRadius: 6,
+            borderSkipped: false,
           }
         ]
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false, // ← ESTO ES LA CLAVE
+        layout: {
+          padding: {
+            top: 20,
+            right: 20,
+            bottom: 20,
+            left: 20
+          }
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: {
+              usePointStyle: true,
+              padding: 20,
+              font: {
+                size: 14,
+                weight: '500'
+              },
+              color: '#ffffff'
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(49, 45, 42, 0.95)',
+            titleColor: '#C74634',
+            bodyColor: '#ffffff',
+            borderColor: '#C74634',
+            borderWidth: 1,
+            cornerRadius: 8,
+            titleFont: {
+              size: 14,
+              weight: 'bold'
+            },
+            bodyFont: {
+              size: 13
+            },
+            padding: 12,
+            callbacks: {
+              title: function(context) {
+                const index = context[0].dataIndex;
+                return allUsersKpi[index]?.userName || allUsersKpi[index]?.name || `Developer ${index + 1}`;
+              },
+              label: function(context) {
+                const hours = context.raw || 0;
+                return `Horas trabajadas: ${hours.toFixed(1)}h`;
+              }
+            }
+          }
+        },
         scales: {
           y: {
             beginAtZero: true,
             title: {
               display: true,
-              text: 'Hours'
+              text: 'Horas',
+              color: '#ffffff',
+              font: {
+                size: 16,
+                weight: 'bold'
+              }
+            },
+            ticks: {
+              color: '#ffffff',
+              font: {
+                size: 14
+              },
+              callback: function(value) {
+                return value.toFixed(1) + 'h';
+              }
+            },
+            grid: {
+              color: 'rgba(255, 255, 255, 0.1)',
+              lineWidth: 1
             }
           },
           x: {
             title: {
               display: true,
-              text: 'Developers'
+              text: 'Desarrolladores',
+              color: '#ffffff',
+              font: {
+                size: 16,
+                weight: 'bold'
+              }
+            },
+            ticks: {
+              color: '#ffffff',
+              font: {
+                size: 12
+              },
+              maxRotation: 45,
+              minRotation: 0
+            },
+            grid: {
+              display: false
             }
           }
         }
@@ -519,7 +879,7 @@ function ReportsDashboard() {
     });
   };
   
-  // Gráfica 3: Tareas Completadas por Developer por Sprint
+  // Gráfica 3: Tareas Completadas por Developer - MEJORADA
   const renderTasksByDeveloperChart = () => {
     if (!allUsersKpi || allUsersKpi.length === 0) return;
     
@@ -530,8 +890,11 @@ function ReportsDashboard() {
       chartInstances.current.tasksByDeveloperChart.destroy();
     }
     
-    // Adaptación para trabajar con la estructura real de datos de tu API
-    const userNames = allUsersKpi.map(user => user.userName || user.name || `User ${user.userId || 'ID'}`);
+    // Preparar datos con nombres más cortos si es necesario
+    const userNames = allUsersKpi.map(user => {
+      const name = user.userName || user.name || `User ${user.userId || 'ID'}`;
+      return name.length > 15 ? name.substring(0, 15) + '...' : name;
+    });
     const completedTasks = allUsersKpi.map(user => user.completedTasks || 0);
     
     chartInstances.current.tasksByDeveloperChart = new Chart(ctx, {
@@ -540,26 +903,115 @@ function ReportsDashboard() {
         labels: userNames,
         datasets: [
           {
-            label: 'Completed Tasks',
+            label: 'Tareas Completadas',
             data: completedTasks,
             backgroundColor: allUsersKpi.map((_, index) => COLORS[(index + 2) % COLORS.length]),
+            borderColor: allUsersKpi.map((_, index) => COLORS[(index + 2) % COLORS.length].replace('0.7', '1')),
+            borderWidth: 2,
+            borderRadius: 6,
+            borderSkipped: false,
           }
         ]
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false, // ← ESTO ES LA CLAVE
+        layout: {
+          padding: {
+            top: 20,
+            right: 20,
+            bottom: 20,
+            left: 20
+          }
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: {
+              usePointStyle: true,
+              padding: 20,
+              font: {
+                size: 14,
+                weight: '500'
+              },
+              color: '#ffffff'
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(49, 45, 42, 0.95)',
+            titleColor: '#C74634',
+            bodyColor: '#ffffff',
+            borderColor: '#C74634',
+            borderWidth: 1,
+            cornerRadius: 8,
+            titleFont: {
+              size: 14,
+              weight: 'bold'
+            },
+            bodyFont: {
+              size: 13
+            },
+            padding: 12,
+            callbacks: {
+              title: function(context) {
+                const index = context[0].dataIndex;
+                return allUsersKpi[index]?.userName || allUsersKpi[index]?.name || `Developer ${index + 1}`;
+              },
+              label: function(context) {
+                const tasks = context.raw || 0;
+                return `Tareas completadas: ${tasks}`;
+              }
+            }
+          }
+        },
         scales: {
           y: {
             beginAtZero: true,
             title: {
               display: true,
-              text: 'Tasks'
+              text: 'Tareas',
+              color: '#ffffff',
+              font: {
+                size: 16,
+                weight: 'bold'
+              }
+            },
+            ticks: {
+              color: '#ffffff',
+              font: {
+                size: 14
+              },
+              stepSize: 1,
+              callback: function(value) {
+                return Math.floor(value) + ' tareas';
+              }
+            },
+            grid: {
+              color: 'rgba(255, 255, 255, 0.1)',
+              lineWidth: 1
             }
           },
           x: {
             title: {
               display: true,
-              text: 'Developers'
+              text: 'Desarrolladores',
+              color: '#ffffff',
+              font: {
+                size: 16,
+                weight: 'bold'
+              }
+            },
+            ticks: {
+              color: '#ffffff',
+              font: {
+                size: 12
+              },
+              maxRotation: 45,
+              minRotation: 0
+            },
+            grid: {
+              display: false
             }
           }
         }
@@ -572,23 +1024,15 @@ function ReportsDashboard() {
     setIsAnalyzing(true);
     setAiAnalysis('');
     
-    // Preparar datos para el análisis
     const currentSprint = sprints.find(s => s.id === selectedSprint);
     const sprintName = currentSprint ? currentSprint.name : 'Selected Sprint';
     
-    // Recopilar datos para el análisis
     const analysisData = {
       sprint: teamKpi,
       developers: allUsersKpi.filter(dev => dev && dev.totalTasks && dev.totalTasks > 0)
     };
     
-    // En una implementación real, enviarías estos datos a tu backend
-    // para la integración con OpenAI. Por ahora, generamos un análisis
-    // básico basado en los datos disponibles.
-    
-    // Simular un delay como si estuviera llamando a la API
     setTimeout(() => {
-      // Generar análisis básico basado en los datos reales
       let generatedAnalysis = `# Análisis del Sprint ${sprintName}\n\n`;
       
       if (teamKpi) {
@@ -642,9 +1086,20 @@ function ReportsDashboard() {
   
   // Función actualizada para manejar el cambio de pestaña
   const handleTabChange = (event, newValue) => {
+    console.log('Cambiando a pestaña:', newValue); // Para debug
     setTabValue(newValue);
     
-    // Re-renderizar gráficas cuando se cambia de pestaña, después de que se actualice el DOM
+    // Limpiar gráficas antes del cambio de pestaña
+    if (newValue !== tabValue) {
+      Object.values(chartInstances.current).forEach(chart => {
+        if (chart && typeof chart.destroy === 'function') {
+          chart.destroy();
+        }
+      });
+      chartInstances.current = {};
+    }
+    
+    // Re-renderizar gráficas cuando se cambia de pestaña
     setTimeout(() => {
       if (newValue === 1 && teamKpi) {
         if (taskCompletionChartRef.current) renderTaskCompletionChart();
@@ -652,39 +1107,50 @@ function ReportsDashboard() {
       } else if (newValue === 2 && userKpi) {
         if (userTaskCompletionChartRef.current) renderUserTaskCompletionChart();
       } else if (newValue === 3) {
-        if (totalHoursBySprintChartRef.current) renderTotalHoursBySprintChart();
-        if (hoursByDeveloperChartRef.current && allUsersKpi.length > 0) renderHoursByDeveloperChart();
-        if (tasksByDeveloperChartRef.current && allUsersKpi.length > 0) renderTasksByDeveloperChart();
+        if (totalHoursBySprintChartRef.current && allSprintsKpi.length > 0) {
+          renderTotalHoursBySprintChart();
+        }
+        if (allUsersKpi.length > 0) {
+          if (hoursByDeveloperChartRef.current) renderHoursByDeveloperChart();
+          if (tasksByDeveloperChartRef.current) renderTasksByDeveloperChart();
+        }
       }
-    }, 100);
+    }, 150);
   };
   
-  // Función actualizada para manejar el cambio de sprint
   const handleSprintChange = (event) => {
-    const newSprintId = event.target.value;
+    const newSprintId = parseInt(event.target.value);
+    setLoadingSprintChange(true);
+    
+    // Limpiar gráficas
+    Object.values(chartInstances.current).forEach(chart => {
+      if (chart && typeof chart.destroy === 'function') {
+        chart.destroy();
+      }
+    });
+    chartInstances.current = {};
+    
     setSelectedSprint(newSprintId);
     
-    // Forzar la actualización de las gráficas cuando cambia el sprint
-    // Se manejarán en los efectos correspondientes
+    // Quitar loading después de un momento
+    setTimeout(() => {
+      setLoadingSprintChange(false);
+    }, 300);
   };
   
-  // Función para manejar el cambio de usuario
   const handleUserChange = (event) => {
     const newUserId = event.target.value;
     setSelectedUser(newUserId);
   };
   
-  // Format percentage display
   const formatPercentage = (value) => {
     return value ? `${value.toFixed(2)}%` : '0%';
   };
   
-  // Format hours display
   const formatHours = (value) => {
     return value ? `${value.toFixed(1)}h` : '0h';
   };
   
-  // Render loading state
   if (loading) {
     return (
       <div className="loading-container">
@@ -694,7 +1160,6 @@ function ReportsDashboard() {
     );
   }
   
-  // Render error state
   if (error) {
     return (
       <div className="error-container">
@@ -777,7 +1242,7 @@ function ReportsDashboard() {
           <div className="grid-item full-width">
             <div className="card">
               <div className="card-content">
-              <h2 className="card-title">
+                <h2 className="card-title">
                   <TaskAltIcon style={{ marginRight: '8px', verticalAlign: 'middle' }} />
                   Completed Tasks in Sprint
                 </h2>
@@ -795,7 +1260,6 @@ function ReportsDashboard() {
                       </thead>
                       <tbody>
                         {completedTasks.map((task, index) => {
-                          // Calcular clase de eficiencia
                           let efficiencyClass = '';
                           const estimatedHours = task.estimatedHours || 0;
                           const actualHours = task.actualHours || 0;
@@ -839,7 +1303,7 @@ function ReportsDashboard() {
         </div>
       </TabPanel>
       
-      {/* 1.2 Team KPI Tab */}
+      {/* 1.2 Team KPI Tab - MEJORADO */}
       <TabPanel value={tabValue} index={1}>
         <div className="grid-container">
           <div className="grid-item full-width">
@@ -908,6 +1372,7 @@ function ReportsDashboard() {
                 </div>
               </div>
               
+              {/* Gráfica de completion mejorada */}
               <div className="grid-item">
                 <div className="card">
                   <div className="card-content">
@@ -915,13 +1380,14 @@ function ReportsDashboard() {
                       <TaskAltIcon style={{ marginRight: '8px', verticalAlign: 'middle' }} />
                       Task Completion
                     </h2>
-                    <div className="chart-container">
+                    <div className="chart-container large">
                       <canvas ref={taskCompletionChartRef}></canvas>
                     </div>
                   </div>
                 </div>
               </div>
               
+              {/* Gráfica de horas mejorada */}
               <div className="grid-item full-width">
                 <div className="card">
                   <div className="card-content">
@@ -929,7 +1395,7 @@ function ReportsDashboard() {
                       <AccessTimeIcon style={{ marginRight: '8px', verticalAlign: 'middle' }} />
                       Hours Comparison
                     </h2>
-                    <div className="chart-container">
+                    <div className="chart-container large">
                       <canvas ref={hoursComparisonChartRef}></canvas>
                     </div>
                   </div>
@@ -940,7 +1406,7 @@ function ReportsDashboard() {
         </div>
       </TabPanel>
       
-      {/* 1.3 Developer KPI Tab */}
+      {/* 1.3 Developer KPI Tab - MEJORADO */}
       <TabPanel value={tabValue} index={2}>
         <div className="grid-container">
           <div className="grid-item full-width">
@@ -1032,7 +1498,7 @@ function ReportsDashboard() {
                       <TaskAltIcon style={{ marginRight: '8px', verticalAlign: 'middle' }} />
                       Task Completion
                     </h2>
-                    <div className="chart-container">
+                    <div className="chart-container large">
                       <canvas ref={userTaskCompletionChartRef}></canvas>
                     </div>
                   </div>
@@ -1060,7 +1526,6 @@ function ReportsDashboard() {
                           </thead>
                           <tbody>
                             {userKpi.tasks.map((task, index) => {
-                              // Calcular clase de eficiencia
                               let efficiencyClass = '';
                               if (task.completed && task.actualHours > 0) {
                                 const efficiencyValue = (task.estimatedHours / task.actualHours) * 100;
@@ -1073,7 +1538,6 @@ function ReportsDashboard() {
                                 }
                               }
                               
-                              // Calcular clase de estado
                               let statusClass = '';
                               const status = task.status || 'Pending';
                               switch(status) {
@@ -1123,7 +1587,7 @@ function ReportsDashboard() {
         </div>
       </TabPanel>
       
-      {/* Nuevas pestañas para comparativas */}
+      {/* Pestaña de comparativas MEJORADA */}
       <TabPanel value={tabValue} index={3}>
         <div className="grid-container">
           <div className="grid-item full-width">
@@ -1145,16 +1609,16 @@ function ReportsDashboard() {
             </div>
           </div>
           
-          {/* Gráfica 1: Horas Totales trabajadas por Sprint */}
+          {/* Gráfica de evolución histórica - MÁS GRANDE */}
           <div className="grid-item full-width">
             <div className="card">
               <div className="card-content">
                 <h2 className="card-title">
                   <AccessTimeIcon style={{ marginRight: '8px', verticalAlign: 'middle' }} />
-                  Horas Totales Trabajadas por Sprint
+                  Evolución de Horas por Sprint
                 </h2>
                 {allSprintsKpi.length > 0 ? (
-                  <div className="chart-container">
+                  <div className="chart-container extra-large">
                     <canvas ref={totalHoursBySprintChartRef}></canvas>
                   </div>
                 ) : (
@@ -1166,16 +1630,16 @@ function ReportsDashboard() {
             </div>
           </div>
           
-          {/* Gráfica 2: Horas Trabajadas por Developer por Sprint */}
-          <div className="grid-item">
+          {/* Gráfica de horas por desarrollador - ANCHO COMPLETO Y GRANDE */}
+          <div className="grid-item full-width">
             <div className="card">
               <div className="card-content">
                 <h2 className="card-title">
                   <AccessTimeIcon style={{ marginRight: '8px', verticalAlign: 'middle' }} />
-                  Horas Trabajadas por Developer
+                  Horas Trabajadas por Desarrollador
                 </h2>
                 {allUsersKpi.length > 0 ? (
-                  <div className="chart-container">
+                  <div className="chart-container extra-large">
                     <canvas ref={hoursByDeveloperChartRef}></canvas>
                   </div>
                 ) : (
@@ -1187,16 +1651,16 @@ function ReportsDashboard() {
             </div>
           </div>
           
-          {/* Gráfica 3: Tareas Completadas por Developer por Sprint */}
-          <div className="grid-item">
+          {/* Gráfica de tareas por desarrollador - ANCHO COMPLETO Y GRANDE */}
+          <div className="grid-item full-width">
             <div className="card">
               <div className="card-content">
                 <h2 className="card-title">
                   <TaskAltIcon style={{ marginRight: '8px', verticalAlign: 'middle' }} />
-                  Tareas Completadas por Developer
+                  Tareas Completadas por Desarrollador
                 </h2>
                 {allUsersKpi.length > 0 ? (
-                  <div className="chart-container">
+                  <div className="chart-container extra-large">
                     <canvas ref={tasksByDeveloperChartRef}></canvas>
                   </div>
                 ) : (
@@ -1208,13 +1672,13 @@ function ReportsDashboard() {
             </div>
           </div>
           
-          {/* Tabla comparativa de desarrolladores */}
+          {/* Tabla comparativa mejorada */}
           <div className="grid-item full-width">
             <div className="card">
               <div className="card-content">
                 <h2 className="card-title">
                   <CompareArrowsIcon style={{ marginRight: '8px', verticalAlign: 'middle' }} />
-                  Comparativa de Desarrolladores
+                  Comparativa Detallada de Desarrolladores
                 </h2>
                 {allUsersKpi.length > 0 ? (
                   <div className="table-container">
@@ -1231,13 +1695,11 @@ function ReportsDashboard() {
                       </thead>
                       <tbody>
                         {allUsersKpi.map((dev, index) => {
-                          // Calcular horas por tarea
                           const completedTasks = dev.completedTasks || 0;
                           const actualHours = dev.totalActualHours || 0;
                           const hoursPerTask = completedTasks > 0 ? (actualHours / completedTasks) : 0;
                           const efficiency = dev.efficiency || 0;
                           
-                          // Determinar observaciones basadas en métricas
                           let observation = '';
                           if (completedTasks === 0) {
                             observation = 'No completó tareas en este sprint.';
@@ -1258,7 +1720,6 @@ function ReportsDashboard() {
                             observation = 'Datos insuficientes para análisis comparativo.';
                           }
                           
-                          // Determinar clase de eficiencia
                           let efficiencyClass = '';
                           if (efficiency < 80) {
                             efficiencyClass = 'efficiency-low';
@@ -1291,11 +1752,10 @@ function ReportsDashboard() {
             </div>
           </div>
           
-          {/* Estadísticas clave en la sección de comparativas */}
+          {/* Estadísticas clave mejoradas */}
           {teamKpi && allUsersKpi.length > 0 && (
             <div className="grid-item full-width">
               <div className="stats-grid">
-                {/* Componente actualizado para Mayor Productividad */}
                 <div className="stat-card">
                   <div className="card-content">
                     <h3 className="card-title">Mayor Productividad</h3>
@@ -1318,7 +1778,6 @@ function ReportsDashboard() {
                   </div>
                 </div>
                 
-                {/* Componente actualizado para Más Horas Trabajadas */}
                 <div className="stat-card">
                   <div className="card-content">
                     <h3 className="card-title">Más Horas Trabajadas</h3>
@@ -1341,7 +1800,6 @@ function ReportsDashboard() {
                   </div>
                 </div>
                 
-                {/* Componente actualizado para Mayor Eficiencia */}
                 <div className="stat-card">
                   <div className="card-content">
                     <h3 className="card-title">Mayor Eficiencia</h3>
@@ -1419,7 +1877,7 @@ function ReportsDashboard() {
                       cursor: 'pointer',
                       transition: 'all 0.3s ease'
                     }}
-                    onClick={generateAiAnalysis} // Usar generateAiAnalysis en lugar de analyzeTeamPerformance
+                    onClick={generateAiAnalysis}
                     disabled={isAnalyzing}
                   >
                     {isAnalyzing ? (
@@ -1455,9 +1913,7 @@ function ReportsDashboard() {
                       }}
                     >
                       <div className="markdown-content">
-                        {/* Convertir el análisis de markdown a HTML */}
                         {aiAnalysis.split('\n').map((line, index) => {
-                          // Procesamiento simple de markdown
                           if (line.startsWith('# ')) {
                             return <h1 key={index} style={{ color: 'var(--oracle-red)', fontSize: '1.5rem', marginTop: '24px', marginBottom: '16px' }}>{line.substring(2)}</h1>;
                           } else if (line.startsWith('## ')) {
@@ -1467,7 +1923,6 @@ function ReportsDashboard() {
                           } else if (line.trim() === '') {
                             return <br key={index} />;
                           } else {
-                            // Procesar negritas
                             const boldRegex = /\*\*(.*?)\*\*/g;
                             const parts = line.split(boldRegex);
                             
@@ -1475,7 +1930,6 @@ function ReportsDashboard() {
                               return (
                                 <p key={index} style={{ marginBottom: '12px', lineHeight: '1.5' }}>
                                   {parts.map((part, i) => {
-                                    // Si es un índice impar (1, 3, 5...), es contenido en negrita
                                     return i % 2 === 1 ? <strong key={i} style={{ color: 'var(--oracle-red)' }}>{part}</strong> : part;
                                   })}
                                 </p>

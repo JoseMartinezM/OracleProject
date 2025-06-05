@@ -15,6 +15,11 @@
   --oracle-gray-border: #5B5652;
   --oracle-gray-light: #E8E8E8;
   --oracle-white: #FFFFFF;
+  --oracle-dark-grey: #4a4a4a;
+  --oracle-light-grey: #8a8a8a;
+  --oracle-blue: #428bca;
+  --oracle-dark-blue: #357ebd;
+  --oracle-dark-red: #b83e2e;
   
   /* Transparencias comunes */
   --trans-05: rgba(255, 255, 255, 0.05);
@@ -50,7 +55,7 @@
   --radius-lg: 12px;
   --radius-xl: 20px;
   
-  /* Espaciados */
+  /* Espaciados mejorados pero no excesivos */
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
   --space-md: 1rem;
@@ -82,12 +87,14 @@ body {
   align-items: center;
 }
 
+/* Contenedor principal - TAMAÑO MODERADO */
 #root {
   width: 100%;
-  max-width: 50rem;
+  max-width: 60rem; /* Reducido de 75rem a 60rem */
   margin: 2rem auto;
 }
 
+/* Card principal - MÁS MODERADA */
 .App {
   background: linear-gradient(160deg, var(--oracle-dark) 0%, #1A1A18 100%);
   color: var(--oracle-text);
@@ -124,7 +131,7 @@ body {
 
 /* Logos y elementos corporativos */
 .oracle-logo {
-  height: 180px !important; /* Forzar altura */
+  height: 180px !important;
   display: inline-block;
   margin-bottom: var(--space-md);
 }
@@ -244,6 +251,11 @@ h2::before {
 div#newinputform {
   width: 100%;
   margin-bottom: var(--space-xl);
+  background-color: var(--oracle-dark);
+  padding: var(--space-lg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--trans-10);
 }
 
 div#newinputform form {
@@ -284,7 +296,7 @@ table#itemlistDone {
 table.itemlist {
   margin-top: var(--space-md);
   border-collapse: separate;
-  border-spacing: 0 8px;
+  border-spacing: 0 10px; /* Aumentado ligeramente */
   margin-bottom: var(--space-lg);
   width: 100%;
 }
@@ -306,7 +318,7 @@ table.itemlist tr.task-row:hover {
 }
 
 table.itemlist td {
-  padding: 0.75rem;
+  padding: 0.9rem; /* Ligeramente aumentado */
   border: none;
 }
 
@@ -486,7 +498,7 @@ button.MuiButton-root.DoneButton:hover {
   gap: var(--space-md);
   margin-bottom: var(--space-lg);
   background: var(--trans-05);
-  padding: var(--space-md);
+  padding: var(--space-lg);
   border-radius: var(--radius-md);
   border: 1px solid var(--trans-05);
 }
@@ -500,6 +512,7 @@ button.MuiButton-root.DoneButton:hover {
 .filter-group label {
   font-size: var(--font-md);
   color: var(--trans-70);
+  font-weight: bold;
 }
 
 .filter-group select {
@@ -527,13 +540,199 @@ button.MuiButton-root.DoneButton:hover {
   background-color: var(--trans-15);
 }
 
-/* Fix para botones deshabilitados */
-button.MuiButton-root.Mui-disabled {
-  background: #4a4a4a;
-  color: var(--trans-40);
+/* Selector de Sprint - ESTILOS COMPLETOS */
+.sprint-selector-container {
+  background-color: var(--oracle-dark);
+  padding: var(--space-lg);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-xl);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--trans-10);
 }
 
-/* Loading container */
+.sprint-selector-container h2 {
+  margin-top: 0;
+  color: var(--oracle-white);
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+}
+
+.sprint-selector {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.sprint-select {
+  background-color: var(--oracle-dark-grey) !important;
+  color: var(--oracle-white) !important;
+  border-radius: 4px !important;
+}
+
+/* Información del sprint */
+.sprint-info {
+  background-color: var(--oracle-dark-grey);
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid var(--oracle-red);
+}
+
+.sprint-info h2 {
+  margin-top: 0;
+  color: var(--oracle-white);
+  font-size: 1.5rem;
+}
+
+.sprint-info p {
+  color: var(--oracle-light-grey);
+  margin-bottom: 10px;
+}
+
+.sprint-dates {
+  display: flex;
+  justify-content: space-between;
+  color: var(--oracle-light-grey);
+  font-size: 0.9rem;
+}
+
+/* Contenedor principal de tareas */
+.task-container {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: var(--space-md);
+}
+
+/* Tareas sin sprint */
+.tasks-without-sprint {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--oracle-dark-grey);
+}
+
+.tasks-without-sprint .task-section-header h2 {
+  color: var(--oracle-light-grey);
+}
+
+/* Botones especiales - COLORES CORRECTOS */
+.AssignButton {
+  background-color: var(--oracle-blue) !important;
+  color: white !important;
+}
+
+.AssignButton:hover {
+  background-color: var(--oracle-dark-blue) !important;
+}
+
+.NewSprintButton {
+  background-color: var(--oracle-red) !important;
+  color: white !important;
+  align-self: flex-end;
+  margin-top: 10px !important;
+}
+
+.NewSprintButton:hover {
+  background-color: var(--oracle-dark-red) !important;
+}
+
+/* StatusButton */
+.StatusButton {
+  background-color: var(--trans-15) !important;
+  color: white !important;
+  min-width: 80px !important;
+}
+
+.StatusButton:hover {
+  background-color: var(--trans-25) !important;
+}
+
+/* Material UI Overrides - COMPLETOS */
+.MuiFormControl-root {
+  margin: 8px 0 !important;
+}
+
+.MuiInputLabel-root {
+  color: var(--oracle-light-grey) !important;
+}
+
+.MuiInputLabel-root.Mui-focused {
+  color: var(--oracle-red) !important;
+}
+
+.MuiOutlinedInput-root {
+  background-color: var(--oracle-dark-grey) !important;
+  color: var(--oracle-white) !important;
+}
+
+.MuiOutlinedInput-notchedOutline {
+  border-color: var(--oracle-light-grey) !important;
+}
+
+.MuiSelect-select {
+  background-color: var(--oracle-dark-grey) !important;
+  color: var(--oracle-white) !important;
+}
+
+.MuiSelect-icon {
+  color: var(--oracle-light-grey) !important;
+}
+
+.MuiMenu-paper,
+.MuiPopover-paper {
+  background-color: var(--oracle-dark) !important;
+  color: var(--oracle-white) !important;
+  border: 1px solid var(--oracle-light-grey) !important;
+}
+
+.MuiMenuItem-root {
+  background-color: var(--oracle-dark) !important;
+  color: var(--oracle-white) !important;
+  font-size: 0.9rem !important;
+  padding: 10px 16px !important;
+}
+
+.MuiMenuItem-root:hover {
+  background-color: var(--oracle-dark-grey) !important;
+}
+
+.MuiMenuItem-root.Mui-selected {
+  background-color: rgba(199, 70, 52, 0.2) !important;
+}
+
+.MuiMenuItem-root.Mui-selected:hover {
+  background-color: rgba(199, 70, 52, 0.3) !important;
+}
+
+/* Para selects nativos */
+select option {
+  background-color: var(--oracle-dark) !important;
+  color: var(--oracle-white) !important;
+}
+
+/* Encabezado de sección de tareas */
+.task-section-header {
+  border-bottom: 1px solid var(--trans-10);
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  margin-top: 30px;
+}
+
+/* Task counter badges */
+.task-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--trans-10);
+  color: var(--trans-70);
+  font-size: var(--font-sm);
+  border-radius: var(--radius-xl);
+  padding: 0.2rem 0.7rem;
+  margin-left: 0.8rem;
+  min-width: 20px;
+}
+
+/* Loading spinner */
 .loading-container {
   display: flex;
   justify-content: center;
@@ -548,6 +747,15 @@ button.MuiButton-root.Mui-disabled {
   width: 40px;
   height: 40px;
   animation: spin 1s linear infinite;
+}
+
+.loading-spinner-small {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: var(--oracle-red);
+  animation: spin 1s ease-in-out infinite;
 }
 
 @keyframes spin {
@@ -576,28 +784,303 @@ button.MuiButton-root.Mui-disabled {
   color: #ffcccc;
 }
 
-/* Encabezado de sección de tareas */
-.task-section-header {
-  border-bottom: 1px solid var(--trans-10);
-  margin-bottom: 15px;
-  padding-bottom: 10px;
-}
-
-/* Task counter badges */
-.task-count {
-  display: inline-flex;
+/* Formulario expandido */
+.form-main-row {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  background: var(--trans-10);
-  color: var(--trans-70);
-  font-size: var(--font-sm);
-  border-radius: var(--radius-xl);
-  padding: 0.2rem 0.7rem;
-  margin-left: 0.8rem;
-  min-width: 20px;
+  width: 100%;
+  margin-bottom: var(--space-sm);
 }
 
-/* Estilos del Modal */
+.expand-button {
+  margin-left: var(--space-sm) !important;
+  background-color: var(--trans-10) !important;
+  color: var(--oracle-red) !important;
+}
+
+.expand-button:hover {
+  background-color: var(--trans-15) !important;
+}
+
+.form-expanded {
+  background-color: var(--trans-10);
+  padding: var(--space-lg);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-lg);
+  animation: fadeIn 0.3s ease-out;
+  border: 1px solid var(--trans-15);
+  box-shadow: var(--shadow-sm);
+}
+
+.form-row {
+  margin-bottom: var(--space-lg);
+}
+
+.form-selects {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.form-selects .MuiFormControl-root {
+  width: 100%;
+}
+
+.status-select, .priority-select {
+  flex: 1;
+  min-width: 150px;
+}
+
+.custom-text-field .MuiOutlinedInput-root {
+  background-color: var(--trans-15);
+  color: var(--oracle-text);
+  border-radius: var(--radius-md);
+}
+
+.custom-text-field .MuiOutlinedInput-input {
+  padding: 14px 16px;
+  font-size: var(--font-md);
+}
+
+.custom-text-field .MuiOutlinedInput-notchedOutline {
+  border-color: var(--trans-25);
+  border-width: 1px;
+}
+
+.custom-text-field:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--trans-40);
+}
+
+.custom-text-field.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: var(--oracle-red);
+}
+
+.custom-input-label {
+  color: var(--trans-90) !important;
+  font-size: var(--font-md) !important;
+  font-weight: 500 !important;
+}
+
+.custom-select {
+  background-color: var(--trans-15) !important;
+  color: var(--oracle-text) !important;
+}
+
+.custom-select .MuiOutlinedInput-notchedOutline {
+  border-color: var(--trans-25) !important;
+}
+
+.custom-select:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--trans-40) !important;
+}
+
+.custom-select.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: var(--oracle-red) !important;
+}
+
+/* Estilos para las horas de tareas */
+.task-hours {
+  font-size: 0.8rem;
+  margin-top: 5px;
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+}
+
+.actual-hours {
+  margin-left: 8px;
+}
+
+/* Campos de entrada numéricos */
+input[type="number"] {
+  padding: 10px;
+  background-color: var(--trans-07);
+  border: 1px solid var(--trans-15);
+  border-radius: var(--radius-md);
+  color: var(--oracle-text);
+  font-size: var(--font-md);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+input[type="number"]:focus {
+  background-color: var(--trans-15);
+  border-color: var(--oracle-red);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(199, 70, 52, 0.25);
+}
+
+input[type="number"]::-webkit-inner-spin-button, 
+input[type="number"]::-webkit-outer-spin-button {
+  opacity: 1;
+}
+
+/* ESTILOS DE LOGIN */
+.login-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--oracle-dark) 0%, #1A1A18 100%);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-container {
+  background: var(--oracle-dark);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-xl);
+  width: 90%;
+  max-width: 400px;
+  border: 1px solid var(--trans-10);
+  animation: fadeIn 0.5s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--oracle-red), transparent);
+  animation: animateBorder 3s linear infinite;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: var(--space-xl);
+}
+
+.login-header img {
+  height: 120px;
+  margin-bottom: var(--space-md);
+}
+
+.login-header h2 {
+  color: var(--oracle-red);
+  margin: 0;
+  padding: 0;
+  font-size: 1.8rem;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.login-input-group {
+  position: relative;
+}
+
+.login-input {
+  width: 100%;
+  padding: 12px 15px;
+  background-color: var(--trans-07);
+  border: 1px solid var(--trans-15);
+  border-radius: var(--radius-md);
+  color: var(--oracle-text);
+  font-size: var(--font-lg);
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.login-input:focus {
+  background-color: var(--trans-15);
+  border-color: var(--oracle-red);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(199, 70, 52, 0.25);
+}
+
+.login-button {
+  background-color: var(--oracle-red);
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-lg);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: var(--space-md);
+}
+
+.login-button:hover {
+  background-color: #d8584a;
+  box-shadow: var(--shadow-red);
+}
+
+.login-button:active {
+  transform: scale(0.98);
+}
+
+.login-error {
+  color: var(--oracle-red);
+  background: rgba(199, 70, 52, 0.1);
+  padding: var(--space-md);
+  border-radius: var(--radius-sm);
+  margin-top: var(--space-md);
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+/* Logout button */
+.logout-container {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  z-index: 100;
+}
+
+.logout-button {
+  background-color: var(--trans-10);
+  color: var(--oracle-text);
+  border: 1px solid var(--trans-15);
+  border-radius: var(--radius-md);
+  padding: 8px 16px;
+  font-size: var(--font-md);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.logout-button:hover {
+  background-color: var(--oracle-red);
+  color: white;
+}
+
+.logout-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Mensaje de bienvenida */
+.welcome-user {
+  background-color: var(--trans-07);
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-lg);
+  text-align: center;
+  font-size: var(--font-md);
+  color: var(--oracle-text);
+}
+
+.welcome-user .user-role {
+  color: var(--oracle-red);
+  font-weight: bold;
+}
+
+/* ESTILOS DE MODALES */
 .modal-header {
   border-bottom: 1px solid var(--trans-10);
   padding-bottom: var(--space-md);
@@ -722,201 +1205,103 @@ button.delete-task:hover {
   background-color: #d8584a !important;
 }
 
-/* Animaciones */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(199, 70, 52, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(199, 70, 52, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(199, 70, 52, 0); }
-}
-
-/* Nuevo elemento añadido - animación de highlight */
-.new-item-highlight {
-  animation: highlight 2s ease-out;
-}
-
-@keyframes highlight {
-  0% { background: rgba(199, 70, 52, 0.2); }
-  100% { background: var(--trans-05); }
-}
-
-/* Mejora de enfoque para accesibilidad */
-*:focus-visible {
-  outline: 2px solid var(--oracle-red);
-  outline-offset: 2px;
-}
-
-/* Mejora para hover de botones en móvil */
-@media (hover: hover) {
-  /* Solo aplicar efectos hover en dispositivos que lo soportan */
-  button:hover {
-    transform: translateY(-2px);
-  }
-}
-
-/* Estilos para el formulario expandido - mejorado */
-.form-main-row {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  margin-bottom: var(--space-sm);
-}
-
-.expand-button {
-  margin-left: var(--space-sm) !important;
-  background-color: var(--trans-10) !important;
-  color: var(--oracle-red) !important;
-}
-
-.expand-button:hover {
-  background-color: var(--trans-15) !important;
-}
-
-.form-expanded {
-  background-color: var(--trans-10);
-  padding: var(--space-lg);
-  border-radius: var(--radius-md);
-  margin-bottom: var(--space-lg);
-  animation: fadeIn 0.3s ease-out;
-  border: 1px solid var(--trans-15);
-  box-shadow: var(--shadow-sm);
-}
-
-.form-row {
-  margin-bottom: var(--space-lg);
-}
-
-.form-selects {
-  display: flex;
-  gap: var(--space-lg);
-}
-
-.status-select, .priority-select {
-  flex: 1;
-  min-width: 150px;
-}
-
-.custom-text-field .MuiOutlinedInput-root {
-  background-color: var(--trans-15);
-  color: var(--oracle-text);
-  border-radius: var(--radius-md);
-}
-
-.custom-text-field .MuiOutlinedInput-input {
-  padding: 14px 16px;
-  font-size: var(--font-md);
-}
-
-.custom-text-field .MuiOutlinedInput-notchedOutline {
-  border-color: var(--trans-25);
-  border-width: 1px;
-}
-
-.custom-text-field:hover .MuiOutlinedInput-notchedOutline {
-  border-color: var(--trans-40);
-}
-
-.custom-text-field.Mui-focused .MuiOutlinedInput-notchedOutline {
-  border-color: var(--oracle-red);
-}
-
-.custom-input-label {
-  color: var(--trans-90) !important;
-  font-size: var(--font-md) !important;
-  font-weight: 500 !important;
-}
-
-.custom-select {
-  background-color: var(--trans-15) !important;
-  color: var(--oracle-text) !important;
-}
-
-.custom-select .MuiOutlinedInput-notchedOutline {
-  border-color: var(--trans-25) !important;
-}
-
-.custom-select:hover .MuiOutlinedInput-notchedOutline {
-  border-color: var(--trans-40) !important;
-}
-
-.custom-select.Mui-focused .MuiOutlinedInput-notchedOutline {
-  border-color: var(--oracle-red) !important;
-}
-
-/* Mejorando los estilos para el selector de estado */
-.status-actions select {
-  background-color: var(--trans-15);
-  color: var(--oracle-text);
-  border: 1px solid var(--trans-25);
-  padding: 6px 10px;
-  border-radius: var(--radius-md);
-  font-size: var(--font-sm);
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 8px center;
-  background-size: 16px;
-  padding-right: 30px;
-  transition: all 0.3s ease;
-}
-
-.status-actions select:focus {
-  outline: none;
-  border-color: var(--oracle-red);
-  box-shadow: 0 0 0 3px rgba(199, 70, 52, 0.25);
-}
-
-/* Añadir estilo para el botón de mover a siguiente estado */
-.modal-action-button.move-next {
+button.modal-action-button.move-next {
   background-color: var(--trans-25) !important;
   color: white !important;
   border: 1px solid var(--trans-40) !important;
 }
 
-.modal-action-button.move-next:hover {
+button.modal-action-button.move-next:hover {
   background-color: var(--status-in-progress) !important;
 }
 
-/* Estilos para la integración de GitHub - mejorados */
-.commit-sha {
-  font-family: monospace;
-  background-color: var(--trans-10);
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  font-size: 0.9rem;
-  display: inline-block;
-}
-
-.github-link {
-  color: var(--oracle-text);
-  text-decoration: none;
-  background-color: var(--trans-15);
-  padding: 8px 14px;
+/* Modal para cambio de estado */
+.status-change-modal {
+  background-color: var(--oracle-dark);
   border-radius: var(--radius-md);
-  font-size: 0.9rem;
+  padding: var(--space-lg);
+  max-width: 400px;
+  width: 100%;
+}
+
+.status-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+}
+
+.status-radio-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  background-color: var(--trans-07);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
   transition: all 0.3s ease;
-  display: inline-block;
-  white-space: nowrap;
-  margin: 4px 0;
 }
 
-.github-link:hover {
+.status-radio-option:hover {
+  background-color: var(--trans-15);
+}
+
+.status-radio-option.selected {
+  background-color: rgba(199, 70, 52, 0.2);
+  border: 1px solid var(--oracle-red);
+}
+
+.status-radio-option input {
+  margin: 0;
+}
+
+.actual-hours-container {
+  margin-top: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.actual-hours-label {
+  margin-bottom: var(--space-sm);
+  display: block;
+  color: var(--oracle-text);
+}
+
+.actual-hours-input {
+  width: 100%;
+  padding: 10px;
+  background-color: var(--trans-07);
+  border: 1px solid var(--trans-15);
+  border-radius: var(--radius-sm);
+  color: var(--oracle-text);
+  font-size: var(--font-md);
+}
+
+.status-action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+}
+
+.cancel-status-button {
+  background-color: var(--trans-15);
+  color: var(--oracle-text);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.update-status-button {
   background-color: var(--oracle-red);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  cursor: pointer;
 }
 
-.dialog-help-text {
-  color: var(--trans-70);
-  font-size: 0.85rem;
-  margin-top: 16px;
-}
-
-/* Estilos para diálogos Material UI - corregidos */
+/* Diálogos Material UI */
 .MuiDialog-paper {
   background-color: var(--oracle-dark) !important;
   color: var(--oracle-text) !important;
@@ -952,7 +1337,6 @@ button.delete-task:hover {
   margin-top: var(--space-md) !important;
 }
 
-/* Material UI Input Override para diálogos */
 .MuiDialog-paper .MuiInputBase-root {
   background-color: var(--trans-10) !important;
   color: var(--oracle-text) !important;
@@ -977,103 +1361,108 @@ button.delete-task:hover {
   color: var(--oracle-red) !important;
 }
 
-/* Estilos mejorados para los selectores y menús desplegables */
-.filters select,
-.MuiSelect-select,
-.MuiInputBase-input,
-.MuiOutlinedInput-input {
-  background-color: var(--oracle-dark-grey) !important;
-  color: var(--oracle-white) !important;
-  border-color: var(--oracle-light-grey) !important;
-}
-
-.MuiOutlinedInput-notchedOutline {
-  border-color: var(--oracle-light-grey) !important;
-}
-
-.MuiInputLabel-root {
-  color: var(--oracle-light-grey) !important;
-}
-
-.MuiInputLabel-root.Mui-focused {
-  color: var(--oracle-red) !important;
-}
-
-.MuiSelect-icon {
-  color: var(--oracle-light-grey) !important;
-}
-
-/* Estilos específicos para el menú desplegable */
-.MuiMenu-paper,
-.MuiPopover-paper {
-  background-color: var(--oracle-dark) !important;
-  color: var(--oracle-white) !important;
-  border: 1px solid var(--oracle-light-grey) !important;
-}
-
-.MuiMenuItem-root {
-  background-color: var(--oracle-dark) !important;
-  color: var(--oracle-white) !important;
-  font-size: 0.9rem !important;
-  padding: 10px 16px !important;
-}
-
-.MuiMenuItem-root:hover {
-  background-color: var(--oracle-dark-grey) !important;
-}
-
-.MuiMenuItem-root.Mui-selected {
-  background-color: rgba(232, 0, 0, 0.2) !important;
-}
-
-.MuiMenuItem-root.Mui-selected:hover {
-  background-color: rgba(232, 0, 0, 0.3) !important;
-}
-
-.MuiPaper-root {
-  background-color: var(--oracle-dark) !important;
-  color: var(--oracle-white) !important;
-  border: 1px solid var(--oracle-light-grey);
-}
-
-/* Estilos para el select nativo */
-select option {
-  background-color: var(--oracle-dark) !important;
-  color: var(--oracle-white) !important;
-}
-
-.filter-group label {
-  color: var(--oracle-white);
-  margin-right: 10px;
-  font-weight: bold;
-}
-
-.filters {
-  background-color: var(--oracle-dark);
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-}
-
-.filter-group {
-  display: flex;
-  align-items: center;
-  margin-right: 20px;
-}
-
-.filter-group select {
-  padding: 8px 12px;
-  border-radius: 4px;
-  border: 1px solid var(--oracle-light-grey);
+/* Inputs adicionales */
+input[type="date"],
+.modal-input,
+.modal-textarea {
+  width: 100%;
+  padding: 10px;
   background-color: var(--oracle-dark-grey);
   color: var(--oracle-white);
-  font-size: 0.9rem;
+  border: 1px solid var(--oracle-light-grey);
+  border-radius: 4px;
+  font-size: 1rem;
+  margin-top: 5px;
 }
 
-/* Responsive design */
+.modal-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.modal-input:focus,
+.modal-textarea:focus {
+  outline: none;
+  border-color: var(--oracle-red);
+}
+
+.create-sprint {
+  background-color: var(--oracle-red) !important;
+  color: white !important;
+}
+
+.create-sprint:hover {
+  background-color: var(--oracle-dark-red) !important;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
+/* Self-assign notice */
+.self-assign-notice {
+  padding: 12px;
+  background-color: var(--trans-10);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--trans-70);
+  font-style: italic;
+}
+
+/* Fix para botones deshabilitados */
+button.MuiButton-root.Mui-disabled {
+  background: #4a4a4a;
+  color: var(--trans-40);
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(199, 70, 52, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(199, 70, 52, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(199, 70, 52, 0); }
+}
+
+.new-item-highlight {
+  animation: highlight 2s ease-out;
+}
+
+@keyframes highlight {
+  0% { background: rgba(199, 70, 52, 0.2); }
+  100% { background: var(--trans-05); }
+}
+
+/* Mejora de enfoque para accesibilidad */
+*:focus-visible {
+  outline: 2px solid var(--oracle-red);
+  outline-offset: 2px;
+}
+
+/* Mejora para hover de botones en móvil */
+@media (hover: hover) {
+  button:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* RESPONSIVE DESIGN */
+@media (min-width: 1200px) {
+  #root {
+    max-width: 70rem;
+  }
+  
+  .task-container {
+    padding: var(--space-lg);
+  }
+}
+
 @media (max-width: 768px) {
   .App {
     margin: var(--space-md);
@@ -1198,11 +1587,20 @@ select option {
     padding: 5px 8px;
   }
   
-  .github-link {
-    padding: 6px 10px;
-    font-size: 0.8rem;
-    width: 100%;
-    text-align: center;
+  .login-container {
+    padding: var(--space-lg);
+  }
+  
+  .login-header img {
+    height: 80px;
+  }
+  
+  .login-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .status-radio-group {
+    font-size: 0.9rem;
   }
 }
 
@@ -1240,809 +1638,4 @@ select option {
     border: 1px solid #ccc;
     color: #333;
   }
-}
-
-/* Estilos para el selector de sprint */
-.sprint-selector-container {
-  background-color: var(--oracle-dark);
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.sprint-selector-container h2 {
-  margin-top: 0;
-  color: var(--oracle-white);
-  font-size: 1.5rem;
-  margin-bottom: 15px;
-}
-
-.sprint-selector {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.sprint-select {
-  background-color: var(--oracle-dark-grey);
-  color: var(--oracle-white);
-  border-radius: 4px;
-}
-
-/* Estilos para la información del sprint */
-.sprint-info {
-  background-color: var(--oracle-dark-grey);
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  border-left: 4px solid var(--oracle-red);
-}
-
-.sprint-info h2 {
-  margin-top: 0;
-  color: var(--oracle-white);
-  font-size: 1.5rem;
-}
-
-.sprint-info p {
-  color: var(--oracle-light-grey);
-  margin-bottom: 10px;
-}
-
-.sprint-dates {
-  display: flex;
-  justify-content: space-between;
-  color: var(--oracle-light-grey);
-  font-size: 0.9rem;
-}
-
-/* Estilos para el contenedor principal de tareas */
-.task-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-/* Estilos para la sección de tareas sin sprint */
-.tasks-without-sprint {
-  margin-top: 40px;
-  padding-top: 20px;
-  border-top: 1px solid var(--oracle-dark-grey);
-}
-
-.tasks-without-sprint .task-section-header h2 {
-  color: var(--oracle-light-grey);
-}
-
-/* Estilos para el botón de asignar a sprint */
-.AssignButton {
-  background-color: var(--oracle-blue) !important;
-  color: white !important;
-}
-
-.AssignButton:hover {
-  background-color: var(--oracle-dark-blue) !important;
-}
-
-/* Estilos para el formulario de nueva tarea */
-#newinputform {
-  background-color: var(--oracle-dark);
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.form-expanded {
-  margin-top: 15px;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 15px;
-}
-
-.form-row {
-  margin-bottom: 15px;
-}
-
-.form-selects {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 15px;
-}
-
-.submit-button {
-  background-color: var(--oracle-red) !important;
-  color: white !important;
-  padding: 10px 20px !important;
-  font-size: 1rem !important;
-  width: 100%;
-}
-
-.submit-button:hover {
-  background-color: var(--oracle-dark-red) !important;
-}
-
-/* Estilos para el spinner de carga pequeño */
-.loading-spinner-small {
-  width: 20px;
-  height: 20px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: var(--oracle-red);
-  animation: spin 1s ease-in-out infinite;
-}
-
-/* Estilos mejorados para los selectores */
-.filters select,
-.MuiSelect-select,
-.MuiInputBase-input,
-.MuiOutlinedInput-input {
-  background-color: var(--oracle-dark-grey) !important;
-  color: var(--oracle-white) !important;
-  border-color: var(--oracle-light-grey) !important;
-}
-
-.MuiOutlinedInput-notchedOutline {
-  border-color: var(--oracle-light-grey) !important;
-}
-
-.MuiInputLabel-root {
-  color: var(--oracle-light-grey) !important;
-}
-
-.MuiInputLabel-root.Mui-focused {
-  color: var(--oracle-red) !important;
-}
-
-.MuiSelect-icon {
-  color: var(--oracle-light-grey) !important;
-}
-
-.MuiMenuItem-root {
-  background-color: var(--oracle-dark) !important;
-  color: var(--oracle-white) !important;
-}
-
-.MuiMenuItem-root:hover {
-  background-color: var(--oracle-dark-grey) !important;
-}
-
-.MuiPaper-root {
-  background-color: var(--oracle-dark) !important;
-  color: var(--oracle-white) !important;
-  border: 1px solid var(--oracle-light-grey);
-}
-
-.filter-group label {
-  color: var(--oracle-white);
-  margin-right: 10px;
-  font-weight: bold;
-}
-
-.filters {
-  background-color: var(--oracle-dark);
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-}
-
-.filter-group {
-  display: flex;
-  align-items: center;
-  margin-right: 20px;
-}
-
-.filter-group select {
-  padding: 8px 12px;
-  border-radius: 4px;
-  border: 1px solid var(--oracle-light-grey);
-  background-color: var(--oracle-dark-grey);
-  color: var(--oracle-white);
-  font-size: 0.9rem;
-}
-
-/* Estilos para el botón de crear nuevo sprint */
-.sprint-selector-container {
-  display: flex;
-  flex-direction: column;
-}
-
-.sprint-selector {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 15px;
-}
-
-.NewSprintButton {
-  background-color: var(--oracle-red) !important;
-  color: white !important;
-  align-self: flex-end;
-  margin-top: 10px !important;
-}
-
-.NewSprintButton:hover {
-  background-color: var(--oracle-dark-red) !important;
-}
-
-/* Estilos para el modal de creación de sprint */
-.modal-input,
-.modal-textarea {
-  width: 100%;
-  padding: 10px;
-  background-color: var(--oracle-dark-grey);
-  color: var(--oracle-white);
-  border: 1px solid var(--oracle-light-grey);
-  border-radius: 4px;
-  font-size: 1rem;
-  margin-top: 5px;
-}
-
-.modal-textarea {
-  min-height: 100px;
-  resize: vertical;
-}
-
-.modal-input:focus,
-.modal-textarea:focus {
-  outline: none;
-  border-color: var(--oracle-red);
-}
-
-.create-sprint {
-  background-color: var(--oracle-red) !important;
-  color: white !important;
-}
-
-.create-sprint:hover {
-  background-color: var(--oracle-dark-red) !important;
-}
-
-/* Estilos para inputs de tipo date y number */
-input[type="date"],
-input[type="number"] {
-  background-color: var(--oracle-dark-grey);
-  color: var(--oracle-white);
-  border: 1px solid var(--oracle-light-grey);
-  border-radius: 4px;
-  padding: 8px;
-}
-
-input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
-  cursor: pointer;
-}
-
-/* Estilos para el Login */
-.login-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, var(--oracle-dark) 0%, #1A1A18 100%);
-  z-index: 1000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.login-container {
-  background: var(--oracle-dark);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
-  padding: var(--space-xl);
-  width: 90%;
-  max-width: 400px;
-  border: 1px solid var(--trans-10);
-  animation: fadeIn 0.5s ease-out;
-  position: relative;
-  overflow: hidden;
-}
-
-.login-container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, var(--oracle-red), transparent);
-  animation: animateBorder 3s linear infinite;
-}
-
-.login-header {
-  text-align: center;
-  margin-bottom: var(--space-xl);
-}
-
-.login-header img {
-  height: 120px;
-  margin-bottom: var(--space-md);
-}
-
-.login-header h2 {
-  color: var(--oracle-red);
-  margin: 0;
-  padding: 0;
-  font-size: 1.8rem;
-}
-
-.login-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
-}
-
-.login-input-group {
-  position: relative;
-}
-
-.login-input {
-  width: 100%;
-  padding: 12px 15px;
-  background-color: var(--trans-07);
-  border: 1px solid var(--trans-15);
-  border-radius: var(--radius-md);
-  color: var(--oracle-text);
-  font-size: var(--font-lg);
-  transition: all 0.3s ease;
-  box-sizing: border-box;
-}
-
-.login-input:focus {
-  background-color: var(--trans-15);
-  border-color: var(--oracle-red);
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(199, 70, 52, 0.25);
-}
-
-.login-button {
-  background-color: var(--oracle-red);
-  color: white;
-  padding: 12px;
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-lg);
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: var(--space-md);
-}
-
-.login-button:hover {
-  background-color: #d8584a;
-  box-shadow: var(--shadow-red);
-}
-
-.login-button:active {
-  transform: scale(0.98);
-}
-
-.login-error {
-  color: var(--oracle-red);
-  background: rgba(199, 70, 52, 0.1);
-  padding: var(--space-md);
-  border-radius: var(--radius-sm);
-  margin-top: var(--space-md);
-  text-align: center;
-  font-size: 0.9rem;
-}
-
-/* Logout button */
-.logout-container {
-  position: absolute;
-  top: var(--space-md);
-  right: var(--space-md);
-  z-index: 100;
-}
-
-.logout-button {
-  background-color: var(--trans-10);
-  color: var(--oracle-text);
-  border: 1px solid var(--trans-15);
-  border-radius: var(--radius-md);
-  padding: 8px 16px;
-  font-size: var(--font-md);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.logout-button:hover {
-  background-color: var(--oracle-red);
-  color: white;
-}
-
-.logout-button svg {
-  width: 16px;
-  height: 16px;
-}
-
-/* Animación de login */
-@keyframes loginPulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.02); }
-  100% { transform: scale(1); }
-}
-
-.login-container {
-  animation: loginPulse 2s infinite;
-}
-
-/* Responsive */
-@media (max-width: 480px) {
-  .login-container {
-    padding: var(--space-lg);
-  }
-  
-  .login-header img {
-    height: 80px;
-  }
-  
-  .login-header h2 {
-    font-size: 1.5rem;
-  }
-}
-
-
-
-/* Estilos para el Login */
-.login-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, var(--oracle-dark) 0%, #1A1A18 100%);
-  z-index: 1000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.login-container {
-  background: var(--oracle-dark);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
-  padding: var(--space-xl);
-  width: 90%;
-  max-width: 400px;
-  border: 1px solid var(--trans-10);
-  animation: fadeIn 0.5s ease-out;
-  position: relative;
-  overflow: hidden;
-}
-
-.login-container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, var(--oracle-red), transparent);
-  animation: animateBorder 3s linear infinite;
-}
-
-.login-header {
-  text-align: center;
-  margin-bottom: var(--space-xl);
-}
-
-.login-header img {
-  height: 120px;
-  margin-bottom: var(--space-md);
-}
-
-.login-header h2 {
-  color: var(--oracle-red);
-  margin: 0;
-  padding: 0;
-  font-size: 1.8rem;
-}
-
-.login-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
-}
-
-.login-input-group {
-  position: relative;
-}
-
-.login-input {
-  width: 100%;
-  padding: 12px 15px;
-  background-color: var(--trans-07);
-  border: 1px solid var(--trans-15);
-  border-radius: var(--radius-md);
-  color: var(--oracle-text);
-  font-size: var(--font-lg);
-  transition: all 0.3s ease;
-  box-sizing: border-box;
-}
-
-.login-input:focus {
-  background-color: var(--trans-15);
-  border-color: var(--oracle-red);
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(199, 70, 52, 0.25);
-}
-
-.login-button {
-  background-color: var(--oracle-red);
-  color: white;
-  padding: 12px;
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--font-lg);
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: var(--space-md);
-}
-
-.login-button:hover {
-  background-color: #d8584a;
-  box-shadow: var(--shadow-red);
-}
-
-.login-button:active {
-  transform: scale(0.98);
-}
-
-.login-error {
-  color: var(--oracle-red);
-  background: rgba(199, 70, 52, 0.1);
-  padding: var(--space-md);
-  border-radius: var(--radius-sm);
-  margin-top: var(--space-md);
-  text-align: center;
-  font-size: 0.9rem;
-}
-
-/* Logout button */
-.logout-container {
-  position: absolute;
-  top: var(--space-md);
-  right: var(--space-md);
-  z-index: 100;
-}
-
-.logout-button {
-  background-color: var(--trans-10);
-  color: var(--oracle-text);
-  border: 1px solid var(--trans-15);
-  border-radius: var(--radius-md);
-  padding: 8px 16px;
-  font-size: var(--font-md);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.logout-button:hover {
-  background-color: var(--oracle-red);
-  color: white;
-}
-
-.logout-button svg {
-  width: 16px;
-  height: 16px;
-}
-
-/* Animación de login */
-@keyframes loginPulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.02); }
-  100% { transform: scale(1); }
-}
-
-.login-container {
-  animation: loginPulse 2s infinite;
-}
-
-/* Estilos para el modal de cambio de estado */
-.status-change-modal {
-  background-color: var(--oracle-dark);
-  border-radius: var(--radius-md);
-  padding: var(--space-lg);
-  max-width: 400px;
-  width: 100%;
-}
-
-.status-radio-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-lg);
-}
-
-.status-radio-option {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-sm);
-  background-color: var(--trans-07);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.status-radio-option:hover {
-  background-color: var(--trans-15);
-}
-
-.status-radio-option.selected {
-  background-color: rgba(199, 70, 52, 0.2);
-  border: 1px solid var(--oracle-red);
-}
-
-.status-radio-option input {
-  margin: 0;
-}
-
-.actual-hours-container {
-  margin-top: var(--space-md);
-  margin-bottom: var(--space-lg);
-}
-
-.actual-hours-label {
-  margin-bottom: var(--space-sm);
-  display: block;
-  color: var(--oracle-text);
-}
-
-.actual-hours-input {
-  width: 100%;
-  padding: 10px;
-  background-color: var(--trans-07);
-  border: 1px solid var(--trans-15);
-  border-radius: var(--radius-sm);
-  color: var(--oracle-text);
-  font-size: var(--font-md);
-}
-
-.status-action-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-md);
-  margin-top: var(--space-lg);
-}
-
-.cancel-status-button {
-  background-color: var(--trans-15);
-  color: var(--oracle-text);
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: 8px 16px;
-  cursor: pointer;
-}
-
-.update-status-button {
-  background-color: var(--oracle-red);
-  color: white;
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: 8px 16px;
-  cursor: pointer;
-}
-
-/* Estilos para el mensaje de bienvenida */
-.welcome-user {
-  background-color: var(--trans-07);
-  padding: 8px 16px;
-  border-radius: var(--radius-md);
-  margin-bottom: var(--space-lg);
-  text-align: center;
-  font-size: var(--font-md);
-  color: var(--oracle-text);
-}
-
-.welcome-user .user-role {
-  color: var(--oracle-red);
-  font-weight: bold;
-}
-
-/* Responsive */
-@media (max-width: 480px) {
-  .login-container {
-    padding: var(--space-lg);
-  }
-  
-  .login-header img {
-    height: 80px;
-  }
-  
-  .login-header h2 {
-    font-size: 1.5rem;
-  }
-  
-  .status-radio-group {
-    font-size: 0.9rem;
-  }
-}
-
-
-
-/* Estilos adicionales para las horas de tareas */
-.task-hours {
-  font-size: 0.8rem;
-  margin-top: 5px;
-  color: rgba(255, 255, 255, 0.7);
-  display: flex;
-  align-items: center;
-}
-
-.actual-hours {
-  margin-left: 8px;
-}
-
-/* Estilos para botones de estado */
-.StatusButton {
-  background-color: var(--trans-15) !important;
-  color: white !important;
-  min-width: 80px !important;
-}
-
-.StatusButton:hover {
-  background-color: var(--trans-25) !important;
-}
-
-/* Estilos para self-assign notice */
-.self-assign-notice {
-  padding: 12px;
-  background-color: var(--trans-10);
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--trans-70);
-  font-style: italic;
-}
-
-/* Estilos para los selectores de formulario */
-.form-selects {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 15px;
-  margin-bottom: 15px;
-}
-
-.form-selects .MuiFormControl-root {
-  width: 100%;
-}
-
-/* Estilos para campos de entrada numéricos */
-input[type="number"] {
-  padding: 10px;
-  background-color: var(--trans-07);
-  border: 1px solid var(--trans-15);
-  border-radius: var(--radius-md);
-  color: var(--oracle-text);
-  font-size: var(--font-md);
-  width: 100%;
-  box-sizing: border-box;
-}
-
-input[type="number"]:focus {
-  background-color: var(--trans-15);
-  border-color: var(--oracle-red);
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(199, 70, 52, 0.25);
-}
-
-input[type="number"]::-webkit-inner-spin-button, 
-input[type="number"]::-webkit-outer-spin-button {
-  opacity: 1;
 }
