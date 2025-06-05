@@ -18,17 +18,18 @@ steps:
   - type: Command
     name: "Setup Java Environment"
     command: |
-      echo "☕ Checking Java environment..."
-      java -version
-      javac -version
-      mvn -version
-      echo "Current JAVA_HOME: $JAVA_HOME"
+      echo "☕ Setting up Java environment..."
       
-      # Check available Java installations
-      echo "Available Java versions:"
-      ls -la /usr/lib/jvm/ 2>/dev/null || echo "No /usr/lib/jvm/ directory found"
-      which java
-      which javac
+      # Find and set JAVA_HOME
+      export JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")
+      echo "Setting JAVA_HOME to: $JAVA_HOME"
+      
+      # Verify Java installation
+      java -version
+      echo "JAVA_HOME: $JAVA_HOME"
+      
+      # Check if Maven works now
+      mvn -version
 
   - type: Command
     name: "Login to OCIR"
@@ -55,11 +56,17 @@ steps:
   - type: Command
     name: "Build Maven Application"
     command: |
+      # Set JAVA_HOME for this step
+      export JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")
+      
       cd MtdrSpring/backend
       echo "📦 Building Maven application..."
+      echo "Using JAVA_HOME: $JAVA_HOME"
       
-      # Use system default Java (likely Java 11 or 17)
-      mvn clean package -DskipTests
+      # Build with Maven, forcing Java 8 compatibility
+      mvn clean package -DskipTests \
+        -Dmaven.compiler.source=8 \
+        -Dmaven.compiler.target=8
 
   - type: Command
     name: "Build & Push Docker Image"
