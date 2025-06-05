@@ -13,6 +13,7 @@ import './index.css';
 
 // Componente de Login
 function Login({ onLogin, loginError }) {
+  // "username" en lugar de "usernam"
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
