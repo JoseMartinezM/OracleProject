@@ -9,12 +9,22 @@ env:
     REGISTRY: "mx-queretaro-1.ocir.io"
     NAMESPACE: "axxjocxrvfar"
     REPO: "todolistapp-springboot"
+    # Set Java version for the build environment
+    JAVA_HOME: "/usr/lib/jvm/java-21-openjdk"
   exportedVariables:
     - BUILDRUN_HASH
     - IMAGE_TAG
     - FULL_IMAGE_URI
 
 steps:
+  - type: Command
+    name: "Setup Java Environment"
+    command: |
+      echo "☕ Setting up Java environment..."
+      java -version
+      mvn -version
+      echo "JAVA_HOME: $JAVA_HOME"
+
   - type: Command
     name: "Login to OCIR"
     command: |
@@ -42,7 +52,8 @@ steps:
     command: |
       cd MtdrSpring/backend
       echo "📦 Building Maven application..."
-      mvn clean package -DskipTests
+      # Force Maven to use Java 21
+      mvn clean package -DskipTests -Dmaven.compiler.source=21 -Dmaven.compiler.target=21
 
   - type: Command
     name: "Build & Push Docker Image"
