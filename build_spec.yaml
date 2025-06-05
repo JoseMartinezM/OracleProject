@@ -16,19 +16,39 @@ env:
 
 steps:
   - type: Command
-    name: "Setup Java Environment"
+    name: "Install Java 17"
     command: |
-      echo "☕ Setting up Java environment..."
+      echo "📦 Installing Java 17..."
       
-      # Find and set JAVA_HOME
-      export JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")
-      echo "Setting JAVA_HOME to: $JAVA_HOME"
+      # Update package manager
+      yum update -y
       
-      # Verify Java installation
+      # Install Java 17 JDK
+      yum install -y java-17-openjdk-devel
+      
+      # Set JAVA_HOME
+      export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+      echo "export JAVA_HOME=/usr/lib/jvm/java-17-openjdk" >> ~/.bashrc
+      
+      # Update alternatives to use Java 17
+      alternatives --set java /usr/lib/jvm/java-17-openjdk/bin/java
+      alternatives --set javac /usr/lib/jvm/java-17-openjdk/bin/javac
+      
+      # Verify installation
+      echo "✅ Java installation complete:"
       java -version
+      javac -version
       echo "JAVA_HOME: $JAVA_HOME"
+
+  - type: Command
+    name: "Setup Maven with Java 17"
+    command: |
+      echo "☕ Setting up Maven with Java 17..."
       
-      # Check if Maven works now
+      # Set JAVA_HOME for Maven
+      export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+      
+      # Verify Maven works with Java 17
       mvn -version
 
   - type: Command
@@ -56,17 +76,18 @@ steps:
   - type: Command
     name: "Build Maven Application"
     command: |
-      # Set JAVA_HOME for this step
-      export JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")
+      # Set JAVA_HOME for Maven build
+      export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
       
       cd MtdrSpring/backend
-      echo "📦 Building Maven application..."
+      echo "📦 Building Maven application with Java 17..."
       echo "Using JAVA_HOME: $JAVA_HOME"
       
-      # Build with Maven, forcing Java 8 compatibility
+      # Build with Maven using Java 17
       mvn clean package -DskipTests \
-        -Dmaven.compiler.source=8 \
-        -Dmaven.compiler.target=8
+        -Dmaven.compiler.source=17 \
+        -Dmaven.compiler.target=17 \
+        -Dmaven.compiler.release=17
 
   - type: Command
     name: "Build & Push Docker Image"
