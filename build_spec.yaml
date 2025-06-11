@@ -4,7 +4,6 @@ shell: bash
 
 env:
   variables:
-    DOCKER_USERNAME: axxjocxrvfar/a01637972@tec.mx
     REGISTRY: "mx-queretaro-1.ocir.io"
     NAMESPACE: "axxjocxrvfar"
     IMAGE_NAME: todolistapp-springboot
@@ -20,7 +19,6 @@ steps:
       export IMAGE_TAG=$(echo "${OCI_PRIMARY_SOURCE_COMMIT_HASH:-$OCI_PRIMARY_SOURCE_REVISION}" | cut -c1-7)
       echo "IMAGE_TAG=$IMAGE_TAG"
 
-
   - type: Command
     name: Docker Image Repository Login
     command: |
@@ -34,11 +32,19 @@ steps:
     name: Build & Push Docker Image
     timeoutInSeconds: 1800
     command: |
-      docker build -t ${DOCKER_USERNAME}/${IMAGE_NAME}:${IMAGE_TAG} \
+      # Build Docker image with proper OCIR format
+      docker build -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} \
                   -f MtdrSpring/backend/Dockerfile \
                   MtdrSpring/backend
-      # optional convenience tag
-      docker tag  ${DOCKER_USERNAME}/${IMAGE_NAME}:${IMAGE_TAG} \
-                  ${DOCKER_USERNAME}/${IMAGE_NAME}:latest
-      docker push ${DOCKER_USERNAME}/${IMAGE_NAME}:${IMAGE_TAG}
-      docker push ${DOCKER_USERNAME}/${IMAGE_NAME}:latest
+      
+      # Create convenience tag
+      docker tag ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} \
+                 ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest
+      
+      # Push both tags
+      docker push ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}
+      docker push ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest
+      
+      echo "✅ Images pushed successfully:"
+      echo "   - ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}"
+      echo "   - ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest"
