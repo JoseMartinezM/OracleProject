@@ -1,39 +1,36 @@
-version: 0.1
-component: build
-timeoutInSeconds: 1200
-shell: bash
-
-steps:
-  - name: "Configure kubeconfig for OKE"
-    command: |
-      echo "✅ Configurando acceso al clúster Kubernetes..."
-      oci ce cluster create-kubeconfig \
-        --cluster-id ocid1.cluster.oc1.mx-queretaro-1.aaaaaaaa6adn4bnnebm2cmeyf522k5tig6qwnvhp2bjelbxfvca2uanotz2a \
-        --file $HOME/.kube/config \
-        --region mx-queretaro-1 \
-        --token-version 2.0.0 \
-        --kube-endpoint PUBLIC_ENDPOINT
-
-  - name: "Verificar conectividad con kubectl"
-    command: |
-      echo "🔍 Verificando conectividad con el clúster..."
-      kubectl get nodes
-
-  - name: "Desplegar aplicación"
-    command: |
-      echo "🚀 Aplicando deployment.yaml..."
-      kubectl apply -f deployment.yaml
-
-  - name: "Esperar a que el servicio esté disponible"
-    command: |
-      echo "⏳ Esperando IP externa del LoadBalancer..."
-      for i in {1..10}; do
-        IP=$(kubectl get svc todolistapp-springboot-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-        if [[ -n "$IP" ]]; then
-          echo "✅ Servicio disponible en: http://$IP"
-          break
-        else
-          echo "⏳ Aún sin IP, reintentando en 10s..."
-          sleep 10
-        fi
-      done
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todolistapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: todolistapp
+  template: 
+    metadata:
+      labels:
+        app: todolistapp
+    spec:
+      containers:
+      - name: todolist-container
+        image: name-tag
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8081
+        env:
+        - name: TNS_ADMIN
+          value: /app/src/main/resources/wallet
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: todolist-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: todolistapp
+  ports:
+    - protocol: TCP
+      port: 81
+      targetPort: 8081

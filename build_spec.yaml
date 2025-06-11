@@ -1,20 +1,28 @@
 version: 0.1
 component: build
-timeoutInSeconds: 3600
 shell: bash
-failImmediatelyOnError: true
 
 env:
   variables:
+    DOCKER_USERNAME:  "${user_ocir}"
     REGISTRY: "mx-queretaro-1.ocir.io"
     NAMESPACE: "axxjocxrvfar"
-    REPO: "todolistapp-springboot"
+    IMAGE_NAME: todolistapp-springboot
   exportedVariables:
-    - BUILDRUN_HASH
+    - IMAGE_TAG
 
 steps:
+  # 0. Compute an immutable tag (7-char Git SHA here)
   - type: Command
-    name: "Login to OCIR"
+    name: Set IMAGE_TAG
+    command: |
+      # Toma los 7 primeros caracteres del commit del gatillo
+      export IMAGE_TAG=$(echo "${OCI_PRIMARY_SOURCE_COMMIT_HASH:-$OCI_PRIMARY_SOURCE_REVISION}" | cut -c1-7)
+      echo "IMAGE_TAG=$IMAGE_TAG"
+
+
+  - type: Command
+    name: Docker Image Repository Login
     command: |
       echo "🔑 Autenticando en OCIR..."
       echo "${auth_token_ocir}" \
@@ -23,36 +31,14 @@ steps:
             --password-stdin
 
   - type: Command
-    name: "Define unique image tag"
-    timeoutInSeconds: 40
+    name: Build & Push Docker Image
+    timeoutInSeconds: 1800
     command: |
-      BUILDRUN_HASH=$(echo "${OCI_BUILD_RUN_ID}" | rev | cut -c 1-7)
-      echo "BUILDRUN_HASH=${BUILDRUN_HASH}"
-
-  - type: Command
-    name: "Build & Push multi-stage"
-    command: |
-      cd MtdrSpring/backend
-
-      # 1) Pull de 'latest' para cache
-      docker pull "${REGISTRY}/${NAMESPACE}/${REPO}:latest" || true
-
-      # 2) Build usando cache-from 'latest'
-      docker build \
-        --cache-from "${REGISTRY}/${NAMESPACE}/${REPO}:latest" \
-        --file Dockerfile \
-        --tag "${REGISTRY}/${NAMESPACE}/${REPO}:${BUILDRUN_HASH}" \
-        .
-
-      # 3) Push de la imagen con hash
-      docker push "${REGISTRY}/${NAMESPACE}/${REPO}:${BUILDRUN_HASH}"
-
-      # 4) Tag y push de 'latest'
-      docker tag "${REGISTRY}/${NAMESPACE}/${REPO}:${BUILDRUN_HASH}" \
-        "${REGISTRY}/${NAMESPACE}/${REPO}:latest"
-      docker push "${REGISTRY}/${NAMESPACE}/${REPO}:latest"
-
-outputArtifacts:
-  - name: todolist-image
-    type: DOCKER_IMAGE
-    location: "${REGISTRY}/${NAMESPACE}/${REPO}:latest"
+      docker build -t ${DOCKER_USERNAME}/${IMAGE_NAME}:${IMAGE_TAG} \
+                  -f MtdrSpring/backend/Dockerfile \
+                  MtdrSpring/backend
+      # optional convenience tag
+      docker tag  ${DOCKER_USERNAME}/${IMAGE_NAME}:${IMAGE_TAG} \
+                  ${DOCKER_USERNAME}/${IMAGE_NAME}:latest
+      docker push ${DOCKER_USERNAME}/${IMAGE_NAME}:${IMAGE_TAG}
+      docker push ${DOCKER_USERNAME}/${IMAGE_NAME}:latest
