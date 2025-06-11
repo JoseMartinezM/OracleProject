@@ -34,7 +34,7 @@ public class OracleDatabaseTest {
             .withUsername("testuser")
             .withPassword(("testpwd"));
 
-
+    
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", oracleContainer::getJdbcUrl);
