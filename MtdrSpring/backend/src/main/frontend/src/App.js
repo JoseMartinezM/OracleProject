@@ -1,9 +1,9 @@
 // Modificación del archivo App.js principal
 import React, { useState, useEffect, useRef } from 'react';
 import NewItem from './NewItem';
-import GitHubIntegration from './GitHubIntegration';
+// import GitHubIntegration from './GitHubIntegration'; // REMOVIDO
 import ReportsDashboard from './ReportsDashboard';
-import { API_LIST, GITHUB_CREATE_BRANCH, GITHUB_GET_BRANCHES, API_SPRINTS, API_USERS, API_TASKS_BY_SPRINT } from './API';
+import { API_LIST, /* GITHUB_CREATE_BRANCH, GITHUB_GET_BRANCHES, */ API_SPRINTS, API_USERS, API_TASKS_BY_SPRINT } from './API'; // REMOVIDOS GITHUB APIs
 import { Button, TableBody, Modal, Box, Typography, IconButton, Select, MenuItem, FormControl, InputLabel, TextField } from '@mui/material';
 import Moment from 'react-moment';
 import CloseIcon from '@mui/icons-material/Close';
@@ -1117,26 +1117,18 @@ function App() {
             Tasks
           </div>
           
-          {/* Sólo mostrar GitHub y KPI Reports para no desarrolladores */}
+          {/* Sólo mostrar KPI Reports para no desarrolladores - GITHUB TAB REMOVIDA */}
           {!isDeveloper && (
-            <>
-              <div 
-                className={`app-tab ${activeTab === 'github' ? 'active' : ''}`}
-                onClick={() => setActiveTab('github')}
-              >
-                GitHub Integration
-              </div>
-              <div 
-                className={`app-tab ${activeTab === 'reports' ? 'active' : ''}`}
-                onClick={() => setActiveTab('reports')}
-              >
-                KPI Reports
-              </div>
-            </>
+            <div 
+              className={`app-tab ${activeTab === 'reports' ? 'active' : ''}`}
+              onClick={() => setActiveTab('reports')}
+            >
+              KPI Reports
+            </div>
           )}
         </div>
         
-        {/* Contenido condicional según la pestaña activa */}
+        {/* Contenido condicional según la pestaña activa - GITHUB REMOVIDO */}
         {activeTab === 'tasks' ? (
           <>
             {/* Selector de Sprint */}
@@ -1343,8 +1335,6 @@ function App() {
               </div>
             )}
           </>
-        ) : activeTab === 'github' ? (
-          <GitHubIntegration todos={items} />
         ) : (
           <ReportsDashboard />
         )}
