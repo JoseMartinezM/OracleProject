@@ -8,7 +8,7 @@ COPY pom.xml .
 COPY src ./src
 
 # Build the application
-RUN mvn clean package -DskipTests
+RUN mvn clean install -DskipTests
 
 # ===== Stage 2: Run the application =====
 FROM openjdk:22
