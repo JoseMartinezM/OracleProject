@@ -1,58 +1,26 @@
 version: 0.1
 component: build
-timeoutInSeconds: 3600
 shell: bash
-failImmediatelyOnError: true
 
 env:
   variables:
     REGISTRY: "mx-queretaro-1.ocir.io"
     NAMESPACE: "axxjocxrvfar"
-    REPO: "todolistapp-springboot"
+    IMAGE_NAME: todolistapp-springboot
   exportedVariables:
-    - BUILDRUN_HASH
     - IMAGE_TAG
-    - FULL_IMAGE_URI
 
 steps:
+  # 0. Compute an immutable tag (7-char Git SHA here)
   - type: Command
-    name: "Install Java 17"
+    name: Set IMAGE_TAG
     command: |
-      echo "📦 Installing Java 17..."
-      
-      # Update package manager
-      yum update -y
-      
-      # Install Java 17 JDK
-      yum install -y java-17-openjdk-devel
-      
-      # Set JAVA_HOME
-      export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
-      echo "export JAVA_HOME=/usr/lib/jvm/java-17-openjdk" >> ~/.bashrc
-      
-      # Update alternatives to use Java 17
-      alternatives --set java /usr/lib/jvm/java-17-openjdk/bin/java
-      alternatives --set javac /usr/lib/jvm/java-17-openjdk/bin/javac
-      
-      # Verify installation
-      echo "✅ Java installation complete:"
-      java -version
-      javac -version
-      echo "JAVA_HOME: $JAVA_HOME"
+      # Toma los 7 primeros caracteres del commit del gatillo
+      export IMAGE_TAG=$(echo "${OCI_PRIMARY_SOURCE_COMMIT_HASH:-$OCI_PRIMARY_SOURCE_REVISION}" | cut -c1-7)
+      echo "IMAGE_TAG=$IMAGE_TAG"
 
   - type: Command
-    name: "Setup Maven with Java 17"
-    command: |
-      echo "☕ Setting up Maven with Java 17..."
-      
-      # Set JAVA_HOME for Maven
-      export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
-      
-      # Verify Maven works with Java 17
-      mvn -version
-
-  - type: Command
-    name: "Login to OCIR"
+    name: Docker Image Repository Login
     command: |
       echo "🔑 Autenticando en OCIR..."
       echo "${auth_token_ocir}" \
@@ -61,74 +29,22 @@ steps:
             --password-stdin
 
   - type: Command
-    name: "Define unique image tag"
-    timeoutInSeconds: 40
+    name: Build & Push Docker Image
+    timeoutInSeconds: 1800
     command: |
-      # Use build run ID for unique tagging
-      BUILDRUN_HASH=$(echo "${OCI_BUILD_RUN_ID}" | rev | cut -c 1-7)
-      IMAGE_TAG="${BUILDRUN_HASH}-$(date +%Y%m%d%H%M%S)"
-      FULL_IMAGE_URI="${REGISTRY}/${NAMESPACE}/${REPO}:${IMAGE_TAG}"
+      # Build Docker image with proper OCIR format
+      docker build -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} \
+                  -f MtdrSpring/backend/Dockerfile \
+                  MtdrSpring/backend
       
-      echo "BUILDRUN_HASH=${BUILDRUN_HASH}"
-      echo "IMAGE_TAG=${IMAGE_TAG}"
-      echo "FULL_IMAGE_URI=${FULL_IMAGE_URI}"
-
-  - type: Command
-    name: "Build Maven Application"
-    command: |
-      # Set JAVA_HOME for Maven build
-      export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+      # Create convenience tag
+      docker tag ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} \
+                 ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest
       
-      cd MtdrSpring/backend
-      echo "📦 Building Maven application with Java 17..."
-      echo "Using JAVA_HOME: $JAVA_HOME"
+      # Push both tags
+      docker push ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}
+      docker push ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest
       
-      # Build with Maven using Java 17
-      mvn clean package -DskipTests \
-        -Dmaven.compiler.source=17 \
-        -Dmaven.compiler.target=17 \
-        -Dmaven.compiler.release=17
-
-  - type: Command
-    name: "Build & Push Docker Image"
-    command: |
-      cd MtdrSpring/backend
-
-      echo "🐳 Building Docker image..."
-      
-      # 1) Pull latest for cache (ignore errors if doesn't exist)
-      docker pull "${REGISTRY}/${NAMESPACE}/${REPO}:latest" || echo "No latest image found for cache"
-
-      # 2) Build with cache and unique tag
-      docker build \
-        --cache-from "${REGISTRY}/${NAMESPACE}/${REPO}:latest" \
-        --file Dockerfile \
-        --tag "${FULL_IMAGE_URI}" \
-        --tag "${REGISTRY}/${NAMESPACE}/${REPO}:latest" \
-        .
-
-      # 3) Push both tags
-      echo "📤 Pushing image with tag: ${IMAGE_TAG}"
-      docker push "${FULL_IMAGE_URI}"
-      
-      echo "📤 Pushing latest tag..."
-      docker push "${REGISTRY}/${NAMESPACE}/${REPO}:latest"
-
-  - type: Command
-    name: "Verify Image Push"
-    command: |
-      echo "✅ Image successfully pushed:"
-      echo "   - Unique tag: ${FULL_IMAGE_URI}"
-      echo "   - Latest tag: ${REGISTRY}/${NAMESPACE}/${REPO}:latest"
-      
-      # Test image pull to verify it's available
-      docker pull "${FULL_IMAGE_URI}"
-      echo "✅ Image verified and ready for deployment"
-
-outputArtifacts:
-  - name: todolist-image-latest
-    type: DOCKER_IMAGE
-    location: "${REGISTRY}/${NAMESPACE}/${REPO}:latest"
-  - name: todolist-image-tagged
-    type: DOCKER_IMAGE
-    location: "${FULL_IMAGE_URI}"
+      echo "✅ Images pushed successfully:"
+      echo "   - ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}"
+      echo "   - ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest"

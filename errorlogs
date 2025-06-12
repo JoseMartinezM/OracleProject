@@ -1,0 +1,2 @@
+java.sql.SQLRecoverableException: IO Error: The Network Adapter could not establish the connection (CONNECTION_ID=nG83BBXbT8aBWhpTX4QcJw==)
+[2m2025-05-31 00:15:33.564[0;39m [31mERROR[0;39m [35m1[0;39m [2m---[0;39m [2m[gram Connection][0;39m [36mo.t.t.u.DefaultBotSession               [0;39m [2m:[0;39m api.telegram.org:443 failed to respond
