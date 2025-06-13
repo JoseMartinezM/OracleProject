@@ -9,6 +9,7 @@ env:
     IMAGE_NAME: todolistapp-springboot
   exportedVariables:
     - IMAGE_TAG
+    - DOCKER_IMAGE_FULL  # NEW: This will be used in the deployment stage
 
 steps:
   # 0. Compute an immutable tag (7-char Git SHA here)
@@ -17,7 +18,9 @@ steps:
     command: |
       # Toma los 7 primeros caracteres del commit del gatillo
       export IMAGE_TAG=$(echo "${OCI_PRIMARY_SOURCE_COMMIT_HASH:-$OCI_PRIMARY_SOURCE_REVISION}" | cut -c1-7)
+      export DOCKER_IMAGE_FULL="${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}"  # NEW
       echo "IMAGE_TAG=$IMAGE_TAG"
+      echo "DOCKER_IMAGE_FULL=$DOCKER_IMAGE_FULL"  # NEW
 
   - type: Command
     name: Docker Image Repository Login
@@ -33,18 +36,18 @@ steps:
     timeoutInSeconds: 1800
     command: |
       # Build Docker image with proper OCIR format
-      docker build -t ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} \
+      docker build -t ${DOCKER_IMAGE_FULL} \  # UPDATED
                   -f MtdrSpring/backend/Dockerfile \
                   MtdrSpring/backend
       
       # Create convenience tag
-      docker tag ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG} \
+      docker tag ${DOCKER_IMAGE_FULL} \
                  ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest
       
       # Push both tags
-      docker push ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}
+      docker push ${DOCKER_IMAGE_FULL}
       docker push ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest
       
       echo "✅ Images pushed successfully:"
-      echo "   - ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}"
+      echo "   - ${DOCKER_IMAGE_FULL}"
       echo "   - ${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest"
