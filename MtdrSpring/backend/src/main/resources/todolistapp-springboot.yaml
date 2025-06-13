@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: todolist-container
-        image: mx-queretaro-1.ocir.io/axxjocxrvfar/todolistapp-springboot:latest
+        image: name-tag
         imagePullPolicy: Always
         ports:
         - containerPort: 8081
