@@ -1098,7 +1098,7 @@ function App() {
           style={{ height: "180px" }} // Hacer el logo más grande
         />
         
-        <h1>TODO LIST</h1>
+        <h1>TODO LISTa</h1>
         
         {/* Mostrar el nombre del usuario actual y su rol */}
         {currentUser && (
